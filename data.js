@@ -317,7 +317,43 @@ window.PORTFOLIO_DATA = {
     menuOpen: 'Open menu',
     menuClose: 'Close menu',
     resumeButton: 'Download Resume',
+    backToTop: 'Back to top',
+    newTab: '(opens in a new tab)',
     footer: 'Built with Three.js, Tailwind CSS and plain JavaScript.',
+    hero: {
+      greeting: "Hi, I'm",
+      ctaProjects: 'View Projects',
+      ctaContact: 'Contact',
+    },
+    projects: {
+      filterLabel: 'Filter projects by category',
+      status: 'Showing {n} of {total} projects',
+      featured: 'Featured',
+      details: 'View details',
+      features: 'Key features',
+      stack: 'Tech stack',
+      github: 'View on GitHub',
+      close: 'Close project details',
+    },
+    education: {
+      degrees: 'Degree',
+      certifications: 'Certifications',
+    },
+    contact: {
+      directHeading: 'Reach me directly',
+      formHeading: 'Send a message',
+      links: { email: 'Email', github: 'GitHub', linkedin: 'LinkedIn', location: 'Location' },
+      fields: { name: 'Name', email: 'Email', subject: 'Subject', message: 'Message' },
+      submit: 'Send Message',
+      sending: 'Sending…',
+      success: 'Thanks! Your message has been sent.',
+      failure: 'The message could not be sent from this page, so your email app has been opened with it pre-filled.',
+      failureLink: 'Open the email draft again',
+      errors: {
+        required: '{field} is required.',
+        email: 'Enter a valid email address, for example name@example.com.',
+      },
+    },
     // Order here = order on the page. `id` must match a <section id> in index.html.
     sections: [
       { id: 'home', nav: 'Home', eyebrow: '', title: '' },
