@@ -8,7 +8,8 @@
  *  3. Section rendering (headers, home, about, skills, projects, experience, education, contact, footer)
  *  4. Motion and interactions (3D toggle, local time, typed line, reveals, counters, scroll UI, cursor, card tilt)
  *  5. Projects: filters, modal, deep links
- *  6. Boot
+ *  6. Contact: copy email, toast, form; section navigation
+ *  7. Boot (also exposes window.Portfolio for palette.js)
  */
 'use strict';
 
@@ -865,7 +866,187 @@
   }
 
   /* =====================================================================
-   * 6. Boot
+   * 6. Contact: copy email, toast, form; public API for palette.js
+   * ===================================================================== */
+
+  /* ----- Toast: short confirmation, announced politely ----- */
+  let toastTimer = 0;
+  function toast(text) {
+    let node = $('#toast');
+    if (!node) {
+      node = el('div', { id: 'toast', class: 'toast', role: 'status', 'aria-live': 'polite' });
+      document.body.append(node);
+    }
+    node.textContent = text;
+    node.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove('is-visible'), 2200);
+  }
+
+  /** Copy text to the clipboard; falls back to a hidden textarea where the API is unavailable. */
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const area = el('textarea', { class: 'sr-only', readonly: true, 'aria-hidden': 'true' });
+      area.value = text;
+      document.body.append(area);
+      area.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      area.remove();
+      return ok;
+    }
+  }
+
+  async function copyEmail() {
+    const ok = await copyText(owner.email);
+    const button = $('#copy-email');
+    const label = $('.copy-label', button);
+    button.classList.toggle('is-copied', ok);
+    label.textContent = ok ? ui.contact.copied : ui.contact.copyEmail;
+    toast(ok ? `${ui.contact.copied}: ${owner.email}` : ui.contact.copyFailed);
+    setTimeout(() => {
+      button.classList.remove('is-copied');
+      label.textContent = ui.contact.copyEmail;
+    }, 2000);
+    return ok;
+  }
+
+  function initCopyEmail() {
+    $('#copy-email').addEventListener('click', copyEmail);
+  }
+
+  /** Trigger a file download through a temporary link (works from file:// too). */
+  function downloadResume() {
+    const a = el('a', { href: owner.resume, download: true, class: 'hidden' });
+    document.body.append(a);
+    a.click();
+    a.remove();
+  }
+
+  /* ----- Contact form: validation, honeypot, FormSubmit AJAX, mailto fallback ----- */
+  function initContactForm() {
+    const form = $('#contact-form');
+    const submit = $('#cf-submit');
+    const spinner = $('.spinner', submit);
+    const label = $('.btn-label', submit);
+    const status = $('#form-status');
+    const C = ui.contact;
+    const ENDPOINT = `https://formsubmit.co/ajax/${owner.email}`;
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const names = ['name', 'email', 'subject', 'message'];
+    let attempted = false;
+
+    const input = (name) => form.elements[name];
+    const errorFor = (name) => {
+      const value = input(name).value.trim();
+      if (!value) return fmt(C.errors.required, { field: C.fields[name] });
+      if (name === 'email' && !EMAIL_RE.test(value)) return C.errors.email;
+      return '';
+    };
+    const showError = (name, message) => {
+      $(`#cf-${name}-err`).textContent = message;
+      if (message) input(name).setAttribute('aria-invalid', 'true');
+      else input(name).removeAttribute('aria-invalid');
+    };
+    const validate = () => {
+      let firstInvalid = null;
+      for (const name of names) {
+        const message = errorFor(name);
+        showError(name, message);
+        if (message && !firstInvalid) firstInvalid = input(name);
+      }
+      return firstInvalid;
+    };
+    const setStatus = (kind, text, link) => {
+      status.className = `form-status${kind ? ` is-${kind}` : ''}`;
+      status.replaceChildren(text);
+      if (link) status.append(' ', link);
+    };
+    const setSending = (sending) => {
+      submit.disabled = sending;
+      spinner.hidden = !sending;
+      label.textContent = sending ? C.sending : C.submit;
+    };
+    const mailtoUrl = (d) =>
+      `mailto:${owner.email}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(`${d.message}\n\n${d.name} <${d.email}>`)}`;
+    const openMailto = (url) => {
+      const a = el('a', { href: url, class: 'hidden' });
+      document.body.append(a);
+      a.click();
+      a.remove();
+    };
+
+    form.addEventListener('input', (e) => {
+      if (attempted && names.includes(e.target.name)) showError(e.target.name, errorFor(e.target.name));
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      attempted = true;
+      setStatus('', '');
+      const firstInvalid = validate();
+      if (firstInvalid) {
+        firstInvalid.focus();
+        return;
+      }
+      if (form.elements._honey.value) return; // a bot filled the honeypot: ignore silently
+
+      const data = Object.fromEntries(names.map((n) => [n, input(n).value.trim()]));
+      setSending(true);
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            _replyto: data.email,
+            _subject: data.subject,
+            message: data.message,
+            _template: 'table',
+            _captcha: 'false',
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || String(json.success) !== 'true') throw new Error(json.message || `HTTP ${res.status}`);
+        setStatus('success', C.success);
+        form.reset();
+        attempted = false;
+      } catch {
+        const url = mailtoUrl(data);
+        setStatus('error', C.failure, el('a', { href: url, text: C.failureLink }));
+        openMailto(url);
+      } finally {
+        setSending(false);
+      }
+    });
+  }
+
+  /** Scroll to a section and move keyboard focus to its heading. */
+  function goToSection(id) {
+    const section = document.getElementById(id);
+    if (!section) return;
+    section.scrollIntoView({ behavior: motionAllowed() ? 'smooth' : 'auto' });
+    const heading = $('h1, h2', section);
+    if (heading) {
+      heading.setAttribute('tabindex', '-1');
+      heading.focus({ preventScroll: true });
+    }
+  }
+
+  /* =====================================================================
+   * 7. Boot
    * ===================================================================== */
   initBootScreen();
   renderNav();
@@ -891,4 +1072,17 @@
   initCardTilt();
   initProjectFilters();
   initProjectModal();
+  initCopyEmail();
+  initContactForm();
+
+  // Public API used by palette.js
+  window.Portfolio = {
+    goToSection,
+    openProject: (slug) => projectModal.open(slug),
+    downloadResume,
+    copyEmail,
+    toggleFx,
+    openGitHub: () => window.open(owner.github, '_blank', 'noopener'),
+    trapFocus,
+  };
 })();
