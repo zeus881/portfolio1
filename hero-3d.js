@@ -29,7 +29,7 @@
     dragSensitivity: 0.008,  // radians per pixel
     dragReturnEase: 0.06,
     maxPixelRatio: 2,
-    retry: { interval: 100, attempts: 40 },
+    maxPixelRatioPhone: 1.5,
   };
 
   /* =====================================================================
@@ -140,15 +140,16 @@
    * 3. Scene and loop
    * ===================================================================== */
   function createHero(THREE, container) {
+    const phone = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    } catch {
+      renderer = new THREE.WebGLRenderer({ antialias: !phone, alpha: true });
+    } catch (err) {
       return null;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, CONFIG.maxPixelRatio));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, phone ? CONFIG.maxPixelRatioPhone : CONFIG.maxPixelRatio));
     renderer.setClearColor(0x000000, 0);
-    container.append(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
@@ -197,7 +198,10 @@
     const dragState = { active: false, x: 0, y: 0, yaw: 0, pitch: 0 };
     const scrollState = { lastY: window.scrollY, lastT: performance.now(), boost: 0, targetBoost: 0 };
 
+    // Desktop only: tilt toward the mouse and drag to rotate. Touch gets the idle animation and
+    // keeps native scrolling (the canvas never captures touches; CSS sets touch-action: pan-y).
     const onPointerMove = (e) => {
+      if (e.pointerType !== 'mouse') return;
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
       target.x = ny * CONFIG.maxTilt;
@@ -210,8 +214,9 @@
       }
     };
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    if (finePointer.matches) container.classList.add('is-draggable');
     const onPointerDown = (e) => {
-      if (!finePointer.matches || e.button !== 0) return;
+      if (!finePointer.matches || e.pointerType !== 'mouse' || e.button !== 0) return;
       dragState.active = true;
       dragState.x = e.clientX;
       dragState.y = e.clientY;
@@ -287,8 +292,11 @@
       update();
     });
     io.observe(container);
-    const ro = new ResizeObserver(resize);
-    ro.observe(container);
+    // ResizeObserver where available (iOS 13.4+), window resize otherwise
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(resize) : null;
+    if (ro) ro.observe(container);
+    else window.addEventListener('resize', resize);
+    window.addEventListener('orientationchange', resize);
 
     const onToggle = (e) => {
       enabled = !!e.detail.enabled;
@@ -308,7 +316,9 @@
       running = false;
       cancelAnimationFrame(frameId);
       io.disconnect();
-      ro.disconnect();
+      if (ro) ro.disconnect();
+      else window.removeEventListener('resize', resize);
+      window.removeEventListener('orientationchange', resize);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('scroll', onScroll);
       container.removeEventListener('pointerdown', onPointerDown);
@@ -336,22 +346,15 @@
   }
 
   /* =====================================================================
-   * 4. Boot: wait for Three.js, then build lazily when the hero is first visible
+   * 4. Boot: main.js loads Three.js first; build the scene the first time the hero is visible
    * ===================================================================== */
-  function lazyStart(THREE, container) {
+  const container = document.getElementById('hero-3d');
+  if (window.THREE && container && 'IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
       if (!entries[0].isIntersecting) return;
       io.disconnect();
-      window.Hero3D = createHero(THREE, container);
+      window.Hero3D = createHero(window.THREE, container);
     });
     io.observe(container);
   }
-
-  let attempts = 0;
-  (function waitForThree() {
-    const container = document.getElementById('hero-3d');
-    if (window.THREE && container) return lazyStart(window.THREE, container);
-    if (++attempts >= CONFIG.retry.attempts) return; // CSS glow in .hero-visual remains
-    setTimeout(waitForThree, CONFIG.retry.interval);
-  })();
 })();
