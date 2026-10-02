@@ -19,3 +19,6 @@ npm-debug.log*
 # Logs and scratch output
 *.log
 screenshots/
+
+# GitHub Pages build output
+_site/

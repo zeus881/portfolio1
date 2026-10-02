@@ -1,167 +1,163 @@
 # Sanjay Kumar — Interactive 3D Portfolio
 
-A "mission control" portfolio for full stack and UAV/drone software roles.
+A "mission control" portfolio for full stack and UAV/drone software roles, built to open on any phone.
 
-The page has:
-- a particle swarm in the background that changes formation for each section
-- a wireframe drone in the hero
-- architecture diagrams for the featured projects
-- a command palette (Ctrl+K)
-
-It is plain HTML, CSS and JavaScript: no framework, bundler or npm dependencies, and no build step.
+- **Content first:** all text is in the HTML the server sends, written from `data.js` by a build script.
+- **3D second:** a swarm-like particle field and a wireframe drone load after first paint, only on devices that can afford them.
+- **No third parties:** no framework, CSS framework or CDN. Three.js and the fonts are served from this folder.
+  The only network request the page makes is the contact form POST.
+- **Offline:** installable, and works offline after the first visit.
 
 ## Run locally
 
+Requires Node.js 18 or later; `scripts/make-images.mjs` needs Node 22 or later.
+
 ```bash
-node local-server.js          # http://localhost:5173
-node tests/smoke.mjs          # content checks
+node scripts/build.mjs   # write markup, manifest, robots.txt, sitemap.xml and 404.html from data.js
+node tests/smoke.mjs     # content, policy, syntax, offline and weight-budget checks
+node local-server.js     # http://localhost:5173 (gzip like the real hosts; PORT=8080 to change the port)
 ```
 
-Set the `PORT` environment variable to use a different port.
+You can also open `index.html` straight from disk (`file://`). Everything shows, but there's no service worker, and the contact form falls back to opening the visitor's email app.
 
-You can also open `index.html` straight from disk (`file://`), and everything works except the contact form. From a file it cannot reach FormSubmit, so it opens a pre-filled email instead.
+**Development tip:** the service worker also runs on `localhost`. If a change doesn't appear, hard-reload, or tick DevTools → Application → Service workers → *Update on reload*.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `index.html` | Page shell, SEO and social meta, JSON-LD, Tailwind config with the design tokens, script order |
-| `styles.css` | Design system: tokens, glass cards, HUD brackets, sections, diagrams, modal, palette, motion |
-| `data.js` | **All content**: owner, counters, skills, projects (with diagrams), experience, education, palette actions, UI text |
-| `main.js` | Renders `data.js`; navigation, 3D toggle, motion, filters, project modal, deep links, contact form |
-| `bg-3d.js` | Morphing particle field (Three.js r128 + GLSL) |
-| `hero-3d.js` | Hero drone scene |
-| `diagrams.js` | SVG architecture diagrams drawn from `data.js` |
-| `palette.js` | Command palette |
-| `local-server.js` | Development server (Node built-ins only) |
-| `tests/smoke.mjs` | Content checks: counts, slugs, links, empty strings, diagrams, SEO sync, phone-number scan |
-| `.github/workflows/pages.yml` | Runs the checks, then deploys to GitHub Pages on every push to `main` |
-| `robots.txt`, `sitemap.xml` | Crawler files |
-| `Sanjay_Kumar_Resume.pdf` | Resume behind the download buttons. **Add this file before deploying.** |
+| `data.js` | **All content** and site settings: URL, title, owner, skills, projects with diagrams, experience, labels |
+| `index.html` | Page shell. The build fills the `build:head` and `build:body` markers; edit `data.js` instead of that markup |
+| `styles.css` | Hand-written design system, safe on iOS Safari 13+ |
+| `main.js` | Enhances the static markup: nav, motion, 3D gating and loading, filters, modal, deep links, form |
+| `palette.js` | Search and commands (Ctrl/Cmd+K, `/`, or the search button) |
+| `diagrams.js` | SVG architecture diagrams. Runs in Node (card previews at build time) and in the browser (modal) |
+| `bg-3d.js`, `hero-3d.js` | Particle field and hero drone (Three.js r128 + GLSL) |
+| `vendor/three.min.js` | Three.js r128, served locally |
+| `fonts/` | Inter, Orbitron and JetBrains Mono, Latin woff2 |
+| `icons/`, `og-image.jpg` | App icons and the 1200×630 share image (from `scripts/make-images.mjs`) |
+| `manifest.webmanifest`, `sw.js`, `404.html` | Install metadata, offline cache, not-found page |
+| `qr.svg` | QR code of the public URL (from `scripts/qr.mjs`) |
+| `scripts/` | `build.mjs`, `icons.mjs` (inline SVG icons), `make-images.mjs`, `qr.mjs` |
+| `tests/smoke.mjs` | The checks listed above |
+| `local-server.js` | Development server |
+| `Sanjay_Kumar_Resume.pdf` | Resume behind the download buttons. **Add this file before publishing.** |
 
-## Deploy
+## Publish on GitHub Pages
 
-### GitHub Pages (automatic)
+The site address will be `https://zeus881.github.io/portfolio/` (this URL is set in `data.js` → `site.url`).
 
-1. Push this folder to a GitHub repository, with `main` as the default branch.
-2. In the repository, open **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
-3. Every push to `main` runs `node --check` on each script and the smoke test, then publishes the site. A failing check stops the deploy.
-   The address is shown in the workflow run and under **Settings → Pages**.
+1. **Create the repository** at https://github.com/new:
+   - Owner `zeus881`, name `portfolio`, **Public**
+   - Leave "Add a README", ".gitignore" and "license" **unticked**
+   - Click **Create repository**
+2. **Push** from this folder:
+   ```bash
+   git remote add origin https://github.com/zeus881/portfolio.git
+   git branch -M main
+   git push -u origin main
+   ```
+   If you have the GitHub CLI and are logged in, `gh repo create zeus881/portfolio --public --source . --remote origin --push` does steps 1 and 2 in one command.
+3. **Turn on Pages:** in the repository open **Settings → Pages** (left sidebar, under "Code and automation"). Under **Build and deployment → Source** choose **GitHub Actions**. No branch needs choosing.
+4. **Watch the deploy:** open the **Actions** tab. The "Deploy to GitHub Pages" workflow runs on every push to `main`: it builds, runs the checks, then publishes. When it turns green, the URL appears in the run summary and under **Settings → Pages**. The first deploy takes 1–2 minutes.
 
-### Netlify
+If the workflow failed before Pages was enabled, open the run and click **Re-run all jobs** after step 3.
 
-- **Drag and drop:** at https://app.netlify.com, open **Sites** and drop the folder onto the deploy area.
-- **From Git:** choose **Add new site → Import an existing project**. Leave the build command empty and set the publish directory to `.`.
+## Publish on Netlify instead (or as well)
 
-### Site URL
+- **Drag and drop:** run `node scripts/build.mjs`, then drop the folder onto https://app.netlify.com/drop.
+- **From Git:** **Add new site → Import an existing project**, pick the repository, set **Build command** to `node scripts/build.mjs` and **Publish directory** to `.`.
 
-The public address appears in five places, and the smoke test fails if they differ:
+**If Netlify becomes the main address,** set `site.url` in `data.js` to the Netlify URL, then run `node scripts/build.mjs` and `node scripts/qr.mjs`.
 
-- `index.html`: the canonical link, `og:url` and the JSON-LD `url`
-- `sitemap.xml`
-- `robots.txt`
+## Connect a custom domain
 
-It is currently set to `https://sanjaykumarpotfolio.netlify.app/`, the address printed on the resume. Change all five together if you deploy somewhere else.
+1. At your DNS provider, add records for your domain:
+   - **Apex domain** (`example.com`): four `A` records to 185.199.108.153, 185.199.109.153, 185.199.110.153 and 185.199.111.153.
+   - **Subdomain** (`www.example.com`): a `CNAME` to `zeus881.github.io`.
+2. On GitHub, open **Settings → Pages → Custom domain**, enter the domain, **Save**, and once the certificate is ready tick **Enforce HTTPS**.
+3. Set `site.url` in `data.js` to `https://your-domain/`, then run:
+   ```bash
+   node scripts/build.mjs && node scripts/qr.mjs && node scripts/make-images.mjs
+   ```
+   This updates the canonical URL, sitemap, robots.txt, share tags, 404 link, QR code and share image.
 
-### Contact form
+## Release a new version
 
-The form posts to `https://formsubmit.co/ajax/sanjaykumarr99009@gmail.com`.
-
-- **Activation:** the first real submission makes FormSubmit email an activation link to that address. Messages are not delivered until it is clicked; until then the page falls back to a mailto draft.
-- **Fallback:** any failure (network error, a timeout after 10 s, or `success: "false"` from FormSubmit) opens a pre-filled email and tells the visitor.
-- **Bots:** submissions that fill the hidden `_honey` field are ignored.
+1. Edit the content in `data.js`, or the code.
+2. Run `node scripts/build.mjs` and `node tests/smoke.mjs`.
+3. **Bump `CACHE_VERSION` in `sw.js`** (for example `v3.0.0` → `v3.0.1`), so returning visitors drop the old cached files.
+4. Commit and push to `main`; the workflow deploys it.
 
 ## Customise
 
-### Add or change a project
+### Project data
 
-Edit `projects` in `data.js`, then run `node tests/smoke.mjs`.
+- Edit `projects` in `data.js`.
+- `slug` must be unique and kebab-case; it is also the deep link `#project-<slug>`.
+- `category` must be one of `projectFilters`. The filter counts update automatically.
+- `featured: true` spans two columns on desktop and needs a `diagram`.
+- `features: []` and `link: null` are allowed.
+
+### Add a project
 
 ```js
 {
-  slug: 'my-project',               // unique, kebab-case; deep link #project-my-project
+  slug: 'my-project',
   title: 'My Project',
-  category: 'Web',                  // one of projectFilters (Drones, Backend, AI, Web)
-  featured: false,                  // true = spans two columns, needs a diagram
+  category: 'Web',
+  featured: false,
   description: 'One or two sentences.',
-  features: ['Shown as a list in the modal'],  // [] for none
+  features: ['Shown in the project details'],
   tags: ['JavaScript', 'Three.js'],
-  link: 'https://github.com/zeus881/my-project', // or null to hide the GitHub button
-  diagram: {                        // featured projects only
-    cols: 3, rows: 1,
-    nodes: [
-      { id: 'ui', label: 'Browser', kind: 'client', col: 0, row: 0 },
-      { id: 'api', label: 'API', sub: 'FastAPI', kind: 'service', col: 1, row: 0 },
-      { id: 'db', label: 'Database', kind: 'store', col: 2, row: 0 },
-    ],
-    groups: [],                     // { id, label, members: [node ids] } draws a frame
-    edges: [{ from: 'ui', to: 'api', both: true }, { from: 'api', to: 'db' }],
-  },
+  link: 'https://github.com/zeus881/my-project', // or null
 },
 ```
 
-Notes on diagrams:
-- `kind` sets the box style: `client`, `service`, `bus`, `store` or `external`.
-- Long labels wrap onto two lines automatically.
-- An edge can start or end at a group id.
+Then run `node scripts/build.mjs && node tests/smoke.mjs`, and bump `CACHE_VERSION`.
 
-To add a filter category, add it to `projectFilters`. The filter buttons and their counts update automatically.
-
-Other content lives in the matching keys of `data.js`:
-- `skills` (each item takes an optional Devicon class)
-- `experience` (`current: true` shows the NOW marker)
-- `education`, `counters`, `whatIDo`
-- `ui` for every label and message
+For a **featured** project, add a `diagram`: nodes on a `col`/`row` grid, `edges` with `both: true` for two-way arrows, and optional `groups` that draw a frame. Copy one of the three existing diagrams as a starting point. `kind` is one of `client | service | bus | store | external`.
 
 ### Colours
 
-The tokens are defined in two places; keep them in sync:
-
-1. `styles.css` → `:root` (`--bg`, `--text`, `--muted`, `--cyan`, `--purple`, `--teal`, `--success`, `--danger`, …)
-2. `index.html` → `tailwind.config.theme.extend.colors`
-
-The particle palette is `CONFIG.colors` in `bg-3d.js`, and the drone colours are `CONFIG.colors` in `hero-3d.js`.
-
-Each section's accent comes from its `data-accent` attribute in `index.html` (`cyan`, `purple` or `teal`).
-Purple text uses `#A78BFA`, because `#8B5CF6` is below 4.5:1 contrast on the glass cards.
+- **Page:** edit the tokens at the top of `styles.css` (`--bg`, `--text`, `--muted`, `--cyan`, `--purple`, `--teal`, `--success`, `--danger`). For the colours used inside `rgba()`, also update the matching `--*-rgb` channel variables.
+- **3D scenes:** `CONFIG.colors` in `bg-3d.js` and `hero-3d.js`.
+- **Accent per section:** the `data-accent` values written by `scripts/build.mjs` (`cyan`, `purple`, `teal`).
+- **Images:** regenerate the icons and share image with `node scripts/make-images.mjs`.
 
 ### Formations (`bg-3d.js`)
 
-- `CONFIG.sectionFormation` maps section ids to formations: `nebula`, `sphere`, `grid`, `vflight`, `helix`, `ring`.
-- `CONFIG.fx` sets each formation's spin, ripple, pulse and idle drift.
-- Shapes are built in `buildFormations()`. Each formation is a function that returns `[x, y, z]` for particle `i`, so adding one means:
-  1. add a `make('name', seed, center, fill)` call
-  2. add an entry to `CONFIG.fx`
-  3. map a section to it
-- `CONFIG.morphSeconds` sets the transition time (1.4 s).
+- **Which formation each section shows:** `CONFIG.sectionFormation` (`nebula`, `sphere`, `grid`, `vflight`, `helix`, `ring`).
+- **Motion per formation:** `CONFIG.fx` (`spin`, `ripple`, `pulse`, `drift`).
+- **Shapes:** `buildFormations()`. Each `make(name, seed, center, fill)` returns `[x, y, z]` for particle `i`. To add a formation, add a `make(...)` call, an entry in `CONFIG.fx`, and map a section to it.
+- **Transition time:** `CONFIG.morphSeconds` (1.4 s).
 
-### Particle counts and performance
+### Particle counts and when 3D runs
 
-| Setting (`bg-3d.js` → `CONFIG`) | Default | Meaning |
+| `bg-3d.js` → `CONFIG` | Default | Used for |
 |---|---|---|
-| `counts.low` | 1200 | Touch devices or narrower than 768 px |
-| `counts.medium` | 2500 | Standard desktop |
-| `counts.high` | 4000 | High-end GPU (RTX, Radeon RX/Pro, Apple M-series, recent GTX, Intel Arc) |
-| `adaptive.minFps` / `adaptive.seconds` | 30 / 3 | Below 30 FPS for 3 s: particles halve once and mouse repulsion turns off |
-| `pointSize`, `mouse.radius`, `mouse.strength` | 6.5, 6, 2.6 | Look and cursor push |
-| `maxPixelRatio` | 2 | Pixel ratio cap |
+| `counts.ultra` | 600 | Small or weak phones: short screen side under 375 px, 4 or fewer cores, or under 4 GB memory |
+| `counts.low` | 1200 | Other phones and narrow screens |
+| `counts.medium` | 2500 | Standard desktops |
+| `counts.high` | 4000 | High-end GPUs (RTX, Radeon RX/Pro, Apple M-series, recent GTX, Intel Arc) |
+| `maxPixelRatio` / `maxPixelRatioPhone` | 2 / 1.5 | Pixel ratio caps |
+| `adaptive.minFps`, `adaptive.seconds` | 30, 3 | Under 30 FPS for 3 s: particles halve once and pointer repulsion stops |
 
-The chosen tier shows in DevTools as `<html data-bg3d="tier:count">`, and the current formation as `data-bg-formation`.
+**When 3D runs** (decided in `main.js` → `deviceAllows3D()`):
+- WebGL must exist.
+- Data saver must be off.
+- `navigator.deviceMemory` must be at least 3, and the connection must not be 2G or slow-2G. Browsers without these APIs are allowed.
+- The visitor's 3D on/off choice is saved in `localStorage` and wins on later visits.
 
-## Behaviour
+**Debugging in DevTools:** `<html data-bg3d="tier:count">` shows the chosen tier, and `data-bg-formation` shows the current formation.
 
-- **3D toggle:** the "3D on/off" button in the nav (or "Toggle 3D" in the palette) stops both scenes and shows the gradient background. The choice is saved in `localStorage`.
-- **Reduced motion:** with `prefers-reduced-motion`, each scene draws one static frame. There is no morphing, typing, reveals, counter animation, cursor or card tilt.
-- **Performance:**
-  - The hero scene starts only when the hero is first visible and stops when it scrolls away.
-  - Both scenes pause in hidden tabs.
-  - Space for the hero canvas is reserved, so nothing shifts when it loads.
-- **Keyboard:**
-  - Ctrl+K / Cmd+K or `/` opens the palette.
-  - The project modal and the palette keep focus inside while open and return it when they close.
-- **Deep links:** `#project-<slug>` opens that project's modal; closing it restores the previous address.
+## Checks and budgets
 
-## Known limitations
-
-- **Tailwind warning:** the Tailwind Play CDN logs one console warning, "should not be used in production". It is the cost of having no build step. To remove it, generate a stylesheet with the Tailwind standalone CLI and replace the CDN script with a `<link>`.
-- **JavaScript required:** the content is rendered from `data.js`, so it does not appear without JavaScript. The crawler-facing title, description, Open Graph tags and JSON-LD are static in `index.html`.
+`node tests/smoke.mjs` fails the deploy if any of these break:
+- **Content counts:** 9 projects (3 featured), 3 roles, 10 skill groups, 4 education items.
+- **Data rules:** unique slugs, `https://` links only, no empty strings, consistent diagrams.
+- **Privacy and requests:** no phone numbers anywhere; no third-party URLs in page files.
+- **Build freshness:** generated files must match `data.js`.
+- **Syntax:** ES2017 in browser scripts.
+- **Offline:** the service-worker app shell exists.
+- **Weight budget:** core files under 180 KB, fonts under 150 KB, everything the page can load under 900 KB, images under 100 KB.

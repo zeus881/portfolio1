@@ -1,4 +1,4 @@
-# Runs the content smoke test, then publishes the folder to GitHub Pages on every push to main.
+# On every push to main: build the markup from data.js, run the checks, publish the site to GitHub Pages.
 name: Deploy to GitHub Pages
 
 on:
@@ -16,29 +16,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Build markup from data.js
+        run: node scripts/build.mjs
+
       - name: Syntax check
-        run: for f in *.js; do node --check "$f"; done
+        run: for f in *.js tests/*.mjs scripts/*.mjs; do node --check "$f"; done
+
       - name: Smoke test
         run: node tests/smoke.mjs
 
+      - name: Collect the public files
+        run: |
+          mkdir -p _site
+          cp index.html 404.html styles.css data.js diagrams.js main.js palette.js bg-3d.js hero-3d.js sw.js \
+             manifest.webmanifest robots.txt sitemap.xml og-image.jpg qr.svg _site/
+          cp -r vendor fonts icons _site/
+          if [ -f Sanjay_Kumar_Resume.pdf ]; then cp Sanjay_Kumar_Resume.pdf _site/; fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
   deploy:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4
