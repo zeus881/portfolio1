@@ -435,7 +435,6 @@ window.PORTFOLIO_DATA = {
     paletteHint: 'Open command palette',
     backToTop: 'Back to top',
     newTab: '(opens in a new tab)',
-    footerBuilt: 'Built with Three.js',
     // Order = page order. `id` matches a <section id> in index.html; `label` becomes "// 03 PROJECTS".
     sections: [
       { id: 'home', nav: 'Home', label: 'HOME' },

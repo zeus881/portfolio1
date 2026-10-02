@@ -440,7 +440,6 @@
     const toTop = el('a', { href: '#home', class: 'icon-btn', 'aria-label': ui.backToTop }, icon('up', 18));
     $('#footer-inner').append(
       el('p', { text: `© ${year} ${owner.name}` }),
-      el('p', { class: 'mono-label', text: ui.footerBuilt }),
       toTop
     );
   }
