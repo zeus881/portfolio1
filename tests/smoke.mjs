@@ -139,6 +139,8 @@ if (ld && data) {
     ld.sameAs.includes(data.owner.github) &&
     ld.sameAs.includes(data.owner.linkedin);
   check('JSON-LD matches data.js (name, jobTitle, email, sameAs)', same);
+  const city = data.owner.location.split(',')[0].trim();
+  check('JSON-LD city matches owner.location', ld.address && ld.address.addressLocality === city, `${ld.address && ld.address.addressLocality} vs ${city}`);
 }
 const canonical = (html.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
 const ogUrl = (html.match(/<meta property="og:url" content="([^"]+)"/) || [])[1];

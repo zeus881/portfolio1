@@ -26,7 +26,7 @@ window.PORTFOLIO_DATA = {
     name: 'Sanjay Kumar',
     initials: 'SK',
     roles: ['Full Stack Developer', 'Backend & APIs', 'UAV Systems & Autonomy', 'Real-Time Web & 3D'],
-    location: 'Greater Noida, India',
+    location: 'Noida, India',
     timeZone: 'Asia/Kolkata',
     timeZoneLabel: 'IST',
     status: 'Available for opportunities',
