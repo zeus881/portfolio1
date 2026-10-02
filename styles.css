@@ -1,0 +1,205 @@
+/*
+ * styles.css
+ * Custom styles that Tailwind utilities do not cover:
+ * colour tokens, background fallback, glass cards, buttons, nav, section headings.
+ * Later phases add the cursor, reveal animations and modal styles here.
+ */
+
+/* ===== Colour tokens ===== */
+:root {
+  --bg: #050816;
+  --electric: #00d4ff;
+  --neon: #8b5cf6;
+  --aqua: #06b6d4;
+  --soft: #f8fafc;
+  --muted: #a5b4cb;          /* body-secondary text, ~8.9:1 on --bg */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --header-h: 64px;
+  --accent: var(--electric); /* overridden per section via data-accent */
+}
+
+/* ===== Base ===== */
+html {
+  scroll-padding-top: var(--header-h);
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: var(--bg);
+  /* Gradient fallback; stays visible if the WebGL background never loads */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 10%, rgba(139, 92, 246, 0.18), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 30%, rgba(0, 212, 255, 0.12), transparent 60%),
+    radial-gradient(ellipse 90% 60% at 50% 100%, rgba(6, 182, 212, 0.1), transparent 60%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3 {
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Visible focus for keyboard users everywhere */
+:focus-visible {
+  outline: 2px solid var(--electric);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Skip link ===== */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--electric);
+  color: var(--bg);
+  font-weight: 600;
+}
+.skip-link:focus { top: 1rem; }
+
+/* ===== Header and navigation ===== */
+.site-header {
+  background: rgba(5, 8, 22, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-link {
+  display: block;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s, background-color 0.2s;
+}
+.nav-link:hover,
+.nav-link.is-active {
+  color: var(--soft);
+  background: rgba(0, 212, 255, 0.08);
+}
+.nav-link.is-active { color: var(--electric); }
+
+.nav-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--glass-border);
+}
+.nav-toggle-bar {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--soft);
+  border-radius: 2px;
+  transition: transform 0.25s, opacity 0.25s;
+}
+.nav-toggle[aria-expanded='true'] .nav-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded='true'] .nav-toggle-bar:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded='true'] .nav-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.mobile-menu { border-top: 1px solid var(--glass-border); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s, color 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--electric), var(--neon));
+  color: var(--bg);
+}
+.btn-primary:hover { box-shadow: 0 0 24px rgba(0, 212, 255, 0.45); transform: translateY(-1px); }
+.btn-outline {
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  color: var(--electric);
+}
+.btn-outline:hover { background: rgba(0, 212, 255, 0.1); box-shadow: 0 0 18px rgba(0, 212, 255, 0.25); }
+
+/* ===== Sections ===== */
+.section {
+  position: relative;
+  padding: 6rem 0;
+}
+.section-hero {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding-top: calc(var(--header-h) + 2rem);
+}
+.section[data-accent='electric'] { --accent: var(--electric); }
+.section[data-accent='neon']     { --accent: var(--neon); }
+.section[data-accent='aqua']     { --accent: var(--aqua); }
+
+.container-x {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+@media (min-width: 640px)  { .container-x { padding: 0 1.5rem; } }
+@media (min-width: 1024px) { .container-x { padding: 0 2rem; } }
+
+.section-eyebrow {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}
+.section-title {
+  margin-top: 0.5rem;
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+.section-title::after {
+  content: '';
+  display: block;
+  width: 4rem;
+  height: 3px;
+  margin-top: 1rem;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+/* ===== Glass card ===== */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.glass:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 20%, transparent);
+}
