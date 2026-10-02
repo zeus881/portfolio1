@@ -6,7 +6,8 @@
  *  1. Helpers and icons
  *  2. Boot screen, navigation and header
  *  3. Section rendering (headers, home, about, skills, projects, experience, education, contact, footer)
- *  4. Boot
+ *  4. Motion and interactions (3D toggle, local time, typed line, reveals, counters, scroll UI, cursor, card tilt)
+ *  5. Boot
  */
 'use strict';
 
@@ -271,6 +272,7 @@
     const P = ui.projects;
     return el('div', { class: `project-item reveal${p.featured ? ' is-featured' : ''}`, 'data-category': p.category, 'data-slug': p.slug }, [
       el('article', { class: `project-card glass${p.featured ? ' hud' : ''}` }, [
+        el('span', { class: 'card-light', 'aria-hidden': 'true' }),
         el('div', { class: 'card-badges' }, [
           el('span', { class: 'badge', text: p.category }),
           p.featured ? el('span', { class: 'badge badge-featured', text: P.featured }) : null,
@@ -437,7 +439,279 @@
   }
 
   /* =====================================================================
-   * 4. Boot
+   * 4. Motion and interactions
+   * ===================================================================== */
+  const root = document.documentElement;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const motionAllowed = () => !reduceMotion.matches;
+
+  /* ----- 3D on/off: remembered in localStorage; bg-3d.js and hero-3d.js listen for fx3d:change ----- */
+  const FX_KEY = 'sk-portfolio-3d';
+  function readFxPreference() {
+    try {
+      return localStorage.getItem(FX_KEY) !== 'off';
+    } catch {
+      return true;
+    }
+  }
+  function setFx(enabled, save = true) {
+    root.dataset.fx = enabled ? 'on' : 'off';
+    const button = $('#toggle-3d');
+    button.setAttribute('aria-pressed', String(enabled));
+    button.textContent = enabled ? ui.toggle3dOn : ui.toggle3dOff;
+    if (save) {
+      try {
+        localStorage.setItem(FX_KEY, enabled ? 'on' : 'off');
+      } catch {
+        /* storage unavailable (private mode): the choice lasts for this visit */
+      }
+    }
+    window.dispatchEvent(new CustomEvent('fx3d:change', { detail: { enabled } }));
+  }
+  const toggleFx = () => setFx(root.dataset.fx === 'off');
+  function initFxToggle() {
+    setFx(readFxPreference(), false); // runs before the 3D scripts read data-fx
+    $('#toggle-3d').addEventListener('click', toggleFx);
+  }
+
+  /* ----- Live local time in the status strip ----- */
+  function initLocalTime() {
+    const node = $('#local-time');
+    const tick = () => {
+      node.textContent = localTime();
+      setTimeout(tick, 60000 - (Date.now() % 60000) + 50); // next minute boundary
+    };
+    tick();
+  }
+
+  /* ----- Typed role line; pauses off-screen and in hidden tabs ----- */
+  function initTypedRoles() {
+    const node = $('#typed-role');
+    const roles = owner.roles;
+    if (!motionAllowed()) {
+      node.textContent = roles.join(' | ');
+      return;
+    }
+    let roleIndex = 0;
+    let charIndex = roles[0].length;
+    let deleting = true;
+    let timer = 0;
+    let running = false;
+    let onScreen = true;
+
+    const step = () => {
+      let delay;
+      if (deleting) {
+        charIndex--;
+        delay = 35;
+        if (charIndex === 0) {
+          deleting = false;
+          roleIndex = (roleIndex + 1) % roles.length;
+          delay = 350;
+        }
+      } else {
+        charIndex++;
+        delay = 70;
+        if (charIndex === roles[roleIndex].length) {
+          deleting = true;
+          delay = 1800;
+        }
+      }
+      node.textContent = roles[roleIndex].slice(0, charIndex);
+      timer = setTimeout(step, delay);
+    };
+    const update = () => {
+      const shouldRun = onScreen && !document.hidden;
+      if (shouldRun && !running) {
+        running = true;
+        timer = setTimeout(step, 1800);
+      } else if (!shouldRun && running) {
+        running = false;
+        clearTimeout(timer);
+      }
+    };
+    new IntersectionObserver((entries) => {
+      onScreen = entries[0].isIntersecting;
+      update();
+    }).observe(node);
+    document.addEventListener('visibilitychange', update);
+  }
+
+  /* ----- Section reveals ----- */
+  function initReveals() {
+    const items = $$('.reveal');
+    if (!motionAllowed()) {
+      items.forEach((n) => n.classList.add('is-visible'));
+      return;
+    }
+    root.classList.add('motion');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.1 }
+    );
+    items.forEach((n) => io.observe(n));
+  }
+
+  /* ----- Counters count up once ----- */
+  function initCounters() {
+    if (!motionAllowed()) return; // final values are already rendered
+    const counters = $$('.counter');
+    counters.forEach((n) => (n.textContent = '0'));
+    const animate = (node) => {
+      const target = Number(node.dataset.target);
+      const start = performance.now();
+      const frame = (now) => {
+        const p = Math.min(1, (now - start) / 1400);
+        node.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          animate(entry.target);
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.6 }
+    );
+    counters.forEach((n) => io.observe(n));
+  }
+
+  /* ----- Scroll-driven UI: progress bar, active nav link, timeline line ----- */
+  function initScrollUI() {
+    const bar = $('#scroll-progress');
+    const ids = ui.sections.map((s) => s.id);
+    const sections = ids.map((id) => document.getElementById(id));
+    const links = $$('.nav-link');
+    const timeline = $('.timeline');
+    const timelineLine = $('.timeline-progress');
+    let activeId = '';
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const max = root.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+      bar.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+
+      // Timeline draws itself up to the middle of the viewport
+      if (motionAllowed()) {
+        const r = timeline.getBoundingClientRect();
+        const p = Math.min(1, Math.max(0, (window.innerHeight * 0.6 - r.top) / r.height));
+        timelineLine.style.transform = `scaleY(${p})`;
+      }
+
+      // Active section: last one whose top has passed 35% of the viewport; the last one wins at the bottom
+      let current = ids[0];
+      sections.forEach((s, i) => {
+        if (s.getBoundingClientRect().top <= window.innerHeight * 0.35) current = ids[i];
+      });
+      if (y >= max - 2) current = ids[ids.length - 1];
+      if (current !== activeId) {
+        activeId = current;
+        for (const link of links) {
+          const on = link.getAttribute('href') === `#${current}`;
+          link.classList.toggle('is-active', on);
+          if (on) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        }
+      }
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+
+  /* ----- Custom cursor: dot + trailing ring, fine pointers only ----- */
+  function initCursor() {
+    if (!finePointer.matches || !motionAllowed()) return;
+    const dot = el('div', { class: 'cursor-dot', 'aria-hidden': 'true' });
+    const ring = el('div', { class: 'cursor-ring', 'aria-hidden': 'true' });
+    document.body.append(dot, ring);
+    root.classList.add('has-cursor');
+
+    let mx = 0;
+    let my = 0;
+    let rx = 0;
+    let ry = 0;
+    let frame = 0;
+    let shown = false;
+    const follow = () => {
+      rx += (mx - rx) * 0.2;
+      ry += (my - ry) * 0.2;
+      ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%) scale(var(--ring-scale))`;
+      frame = Math.abs(mx - rx) + Math.abs(my - ry) > 0.2 ? requestAnimationFrame(follow) : 0; // stop when caught up
+    };
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        if (e.pointerType !== 'mouse') return;
+        mx = e.clientX;
+        my = e.clientY;
+        dot.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
+        if (!shown) {
+          shown = true;
+          rx = mx;
+          ry = my;
+          root.classList.add('cursor-visible');
+        }
+        if (!frame) frame = requestAnimationFrame(follow);
+      },
+      { passive: true }
+    );
+    const interactive = 'a, button, input, textarea, label, .project-card, .hero-visual';
+    document.addEventListener('pointerover', (e) => ring.classList.toggle('is-hover', !!e.target.closest(interactive)));
+    document.addEventListener('pointerdown', () => ring.classList.add('is-down'));
+    document.addEventListener('pointerup', () => ring.classList.remove('is-down'));
+    root.addEventListener('mouseleave', () => root.classList.remove('cursor-visible'));
+    root.addEventListener('mouseenter', () => shown && root.classList.add('cursor-visible'));
+  }
+
+  /* ----- Project cards tilt toward the cursor with a moving light ----- */
+  function initCardTilt() {
+    if (!finePointer.matches || !motionAllowed()) return;
+    const MAX = 6; // degrees
+    for (const card of $$('.project-card')) {
+      let frame = 0;
+      card.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          card.style.transform = `perspective(1000px) rotateX(${(-y * MAX).toFixed(2)}deg) rotateY(${(x * MAX).toFixed(2)}deg)`;
+          card.style.setProperty('--light-x', `${((x + 0.5) * 100).toFixed(1)}%`);
+          card.style.setProperty('--light-y', `${((y + 0.5) * 100).toFixed(1)}%`);
+          card.classList.add('is-tilting');
+        });
+      });
+      card.addEventListener('pointerleave', () => {
+        cancelAnimationFrame(frame);
+        card.style.transform = '';
+        card.classList.remove('is-tilting');
+      });
+    }
+  }
+
+  /* =====================================================================
+   * 5. Boot
    * ===================================================================== */
   initBootScreen();
   renderNav();
@@ -452,4 +726,13 @@
   renderEducation();
   renderContact();
   renderFooter();
+
+  initFxToggle();
+  initLocalTime();
+  initReveals();
+  initTypedRoles();
+  initCounters();
+  initScrollUI();
+  initCursor();
+  initCardTilt();
 })();

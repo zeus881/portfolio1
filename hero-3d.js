@@ -1,15 +1,15 @@
 /*
  * hero-3d.js
- * Hero scene: a wireframe quadcopter built from Three.js primitives.
- * Body, four arms, four motors with spinning rotors and prop guards, landing skids and a gimbal.
- * It rotates slowly, hovers, and tilts toward the mouse.
+ * Hero scene: a wireframe quadcopter built from Three.js primitives
+ * (body, four arms, four rotor discs, two landing skids, a gimbal) over a faint ground grid and a cyan glow.
  *
- * Blocks:
- *  1. Config
- *  2. Model     builds the drone from primitives
- *  3. Scene     renderer, camera, holographic ground rings
- *  4. Loop      animation; runs only while the hero is on screen and the tab is visible
- *  5. Boot      waits for Three.js and the #hero-3d container
+ * Behaviour
+ *  - Lazy start: the scene is built the first time the hero is visible; it runs only while visible.
+ *  - Idle hover bob and yaw; rotors spin faster with scroll velocity.
+ *  - Tilts toward the cursor; on desktop it can be dragged to rotate and eases back on release.
+ *  - Stops with the 3D toggle (fx3d:change) and when the tab is hidden; one static frame under reduced motion.
+ *
+ * Blocks: 1. Config · 2. Model · 3. Scene and loop · 4. Boot
  */
 'use strict';
 
@@ -18,12 +18,16 @@
    * 1. Config
    * ===================================================================== */
   const CONFIG = {
-    colors: { body: 0x00d4ff, rotor: 0x8b5cf6, accent: 0x06b6d4, soft: 0xf8fafc },
+    colors: { body: 0x00d4ff, rotor: 0x8b5cf6, accent: 0x06b6d4, soft: 0xe6edf7 },
     armLength: 1.9,
-    spinSpeed: 0.25,      // radians per second, whole drone
-    rotorSpeed: 28,       // radians per second
-    maxTilt: 0.35,        // radians
+    yawSpeed: 0.22,          // radians per second
+    rotorSpeed: 24,          // radians per second at rest
+    rotorBoostMax: 3,        // extra multiples of rotorSpeed at high scroll speed
+    scrollForFullBoost: 2400, // px per second
+    maxTilt: 0.3,
     tiltEase: 0.06,
+    dragSensitivity: 0.008,  // radians per pixel
+    dragReturnEase: 0.06,
     maxPixelRatio: 2,
     retry: { interval: 100, attempts: 40 },
   };
@@ -33,45 +37,28 @@
    * ===================================================================== */
   function buildDrone(THREE) {
     const C = CONFIG.colors;
-    const materials = new Map();
-    const lineMat = (color, opacity = 1) => {
-      const key = `${color}:${opacity}`;
-      if (!materials.has(key)) {
-        materials.set(key, new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity }));
-      }
-      return materials.get(key);
-    };
-    // Outline of a solid primitive
+    const lineMat = (color, opacity = 1) => new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity });
     const edges = (geometry, color, opacity) => {
       const line = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 1), lineMat(color, opacity));
       geometry.dispose();
       return line;
     };
-    // Full wireframe of a curved primitive
     const wire = (geometry, color, opacity) => {
       const line = new THREE.LineSegments(new THREE.WireframeGeometry(geometry), lineMat(color, opacity));
       geometry.dispose();
       return line;
     };
-    const circle = (radius, segments, color, opacity) => {
-      const pts = [];
-      for (let i = 0; i < segments; i++) {
-        const a = (i / segments) * Math.PI * 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
-      }
-      return new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), lineMat(color, opacity));
-    };
 
     const drone = new THREE.Group();
     const rotors = [];
 
-    // Body: octagonal frame plus a canopy dome
+    // Body and canopy
     drone.add(edges(new THREE.CylinderGeometry(0.75, 0.9, 0.35, 8), C.body));
-    const canopy = wire(new THREE.SphereGeometry(0.52, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2), C.accent, 0.65);
+    const canopy = wire(new THREE.SphereGeometry(0.5, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2), C.accent, 0.6);
     canopy.position.y = 0.17;
     drone.add(canopy);
 
-    // Arms, motors, rotors and prop guards
+    // Arms, motors and rotor discs
     const L = CONFIG.armLength;
     for (let i = 0; i < 4; i++) {
       const a = Math.PI / 4 + (i * Math.PI) / 2;
@@ -82,39 +69,51 @@
       arm.rotation.y = -a;
       drone.add(arm);
 
-      const motorPos = dir.clone().multiplyScalar(L + 0.55);
-      const motor = edges(new THREE.CylinderGeometry(0.17, 0.17, 0.3, 10), C.accent);
-      motor.position.copy(motorPos).setY(0.08);
+      const tip = dir.clone().multiplyScalar(L + 0.55);
+      const motor = edges(new THREE.CylinderGeometry(0.16, 0.16, 0.28, 10), C.accent);
+      motor.position.copy(tip).setY(0.08);
       drone.add(motor);
 
+      // Translucent disc + rim + two blades that spin
+      const disc = new THREE.Mesh(
+        new THREE.CircleGeometry(0.85, 40),
+        new THREE.MeshBasicMaterial({ color: C.rotor, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false })
+      );
+      disc.rotation.x = -Math.PI / 2;
+      disc.position.copy(tip).setY(0.27);
+      drone.add(disc);
+      const rim = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(
+          Array.from({ length: 40 }, (_, k) => new THREE.Vector3(Math.cos((k / 40) * Math.PI * 2) * 0.85, 0, Math.sin((k / 40) * Math.PI * 2) * 0.85))
+        ),
+        lineMat(C.rotor, 0.55)
+      );
+      rim.position.copy(tip).setY(0.27);
+      drone.add(rim);
+
       const rotor = new THREE.Group();
-      rotor.position.copy(motorPos).setY(0.27);
-      rotor.add(edges(new THREE.BoxGeometry(1.5, 0.02, 0.13), C.rotor));
-      rotor.add(edges(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 8), C.soft, 0.8));
-      rotor.userData.direction = i % 2 === 0 ? 1 : -1; // diagonal pairs spin in opposite directions
+      rotor.position.copy(tip).setY(0.28);
+      rotor.add(edges(new THREE.BoxGeometry(1.5, 0.02, 0.12), C.rotor));
+      rotor.userData.direction = i % 2 === 0 ? 1 : -1; // diagonal pairs counter-rotate
       rotors.push(rotor);
       drone.add(rotor);
-
-      const guard = circle(0.85, 40, C.rotor, 0.45);
-      guard.position.copy(motorPos).setY(0.27);
-      drone.add(guard);
     }
 
-    // Landing skids
+    // Two landing skids with struts
     for (const side of [-1, 1]) {
-      const skid = edges(new THREE.CylinderGeometry(0.035, 0.035, 2.0, 6), C.accent, 0.8);
+      const skid = edges(new THREE.CylinderGeometry(0.035, 0.035, 2.0, 6), C.accent, 0.85);
       skid.rotation.x = Math.PI / 2;
       skid.position.set(side * 0.65, -0.75, 0);
       drone.add(skid);
       for (const end of [-1, 1]) {
-        const strut = edges(new THREE.CylinderGeometry(0.03, 0.03, 0.62, 6), C.accent, 0.8);
+        const strut = edges(new THREE.CylinderGeometry(0.03, 0.03, 0.62, 6), C.accent, 0.85);
         strut.position.set(side * 0.55, -0.45, end * 0.5);
         strut.rotation.z = side * 0.35;
         drone.add(strut);
       }
     }
 
-    // Camera gimbal under the body
+    // Gimbal
     const gimbal = wire(new THREE.SphereGeometry(0.22, 8, 6), C.soft, 0.7);
     gimbal.position.y = -0.38;
     drone.add(gimbal);
@@ -122,16 +121,30 @@
     return { drone, rotors };
   }
 
+  /** Soft radial glow texture drawn on a canvas (no image files). */
+  function glowTexture(THREE) {
+    const size = 128;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0, 'rgba(0, 212, 255, 0.55)');
+    g.addColorStop(0.45, 'rgba(0, 212, 255, 0.12)');
+    g.addColorStop(1, 'rgba(0, 212, 255, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    return new THREE.CanvasTexture(c);
+  }
+
   /* =====================================================================
-   * 3–4. Scene and loop
+   * 3. Scene and loop
    * ===================================================================== */
-  function start(THREE, container) {
+  function createHero(THREE, container) {
     let renderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
-      container.classList.add('hero-fallback');
-      return;
+      return null;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, CONFIG.maxPixelRatio));
     renderer.setClearColor(0x000000, 0);
@@ -140,38 +153,34 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 2.8, 10.6);
-    camera.lookAt(0, -0.2, 0);
+    camera.lookAt(0, -0.3, 0);
 
-    // Hierarchy: tilt (follows mouse) → spin (slow yaw) → hover (bob) → drone
+    // tilt (cursor) → drag (user rotation) → yaw (idle spin) → hover (bob) → drone
     const tilt = new THREE.Group();
-    const spin = new THREE.Group();
+    const drag = new THREE.Group();
+    const yaw = new THREE.Group();
     const hover = new THREE.Group();
     const { drone, rotors } = buildDrone(THREE);
     hover.add(drone);
-    spin.add(hover);
-    tilt.add(spin);
+    yaw.add(hover);
+    drag.add(yaw);
+    tilt.add(drag);
     scene.add(tilt);
+    yaw.rotation.y = 0.6;
 
-    // Holographic ground rings
-    const rings = new THREE.Group();
-    [1.9, 2.8, 3.7].forEach((r, i) => {
-      const pts = [];
-      for (let k = 0; k < 96; k++) {
-        const a = (k / 96) * Math.PI * 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r));
-      }
-      rings.add(
-        new THREE.LineLoop(
-          new THREE.BufferGeometry().setFromPoints(pts),
-          new THREE.LineBasicMaterial({ color: CONFIG.colors.accent, transparent: true, opacity: 0.35 - i * 0.09 })
-        )
-      );
-    });
-    rings.position.y = -1.9;
-    scene.add(rings);
-
-    // Default pose: slight angle so the static frame reads as 3D
-    spin.rotation.y = 0.6;
+    // Ground grid and glow
+    const grid = new THREE.GridHelper(6.4, 16, CONFIG.colors.accent, CONFIG.colors.accent);
+    grid.material.transparent = true;
+    grid.material.opacity = 0.12;
+    grid.position.y = -1.9;
+    scene.add(grid);
+    const glow = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.4, 6.4),
+      new THREE.MeshBasicMaterial({ map: glowTexture(THREE), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
+    );
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.y = -1.88;
+    scene.add(glow);
 
     /* ----- Sizing ----- */
     function resize() {
@@ -183,13 +192,43 @@
       if (!running) renderer.render(scene, camera);
     }
 
-    /* ----- Mouse tilt (relative to the window) ----- */
+    /* ----- Inputs: cursor tilt, drag rotation, scroll velocity ----- */
     const target = { x: 0, z: 0 };
+    const dragState = { active: false, x: 0, y: 0, yaw: 0, pitch: 0 };
+    const scrollState = { lastY: window.scrollY, lastT: performance.now(), boost: 0, targetBoost: 0 };
+
     const onPointerMove = (e) => {
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
-      target.x = ny * CONFIG.maxTilt;   // pitch toward the cursor
-      target.z = -nx * CONFIG.maxTilt;  // roll toward the cursor
+      target.x = ny * CONFIG.maxTilt;
+      target.z = -nx * CONFIG.maxTilt;
+      if (dragState.active) {
+        dragState.yaw += (e.clientX - dragState.x) * CONFIG.dragSensitivity;
+        dragState.pitch = Math.max(-0.6, Math.min(0.6, dragState.pitch + (e.clientY - dragState.y) * CONFIG.dragSensitivity));
+        dragState.x = e.clientX;
+        dragState.y = e.clientY;
+      }
+    };
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const onPointerDown = (e) => {
+      if (!finePointer.matches || e.button !== 0) return;
+      dragState.active = true;
+      dragState.x = e.clientX;
+      dragState.y = e.clientY;
+      container.classList.add('is-dragging');
+      container.setPointerCapture(e.pointerId);
+    };
+    const onPointerUp = () => {
+      dragState.active = false;
+      container.classList.remove('is-dragging');
+    };
+    const onScroll = () => {
+      const now = performance.now();
+      const dt = Math.max(now - scrollState.lastT, 1) / 1000;
+      const v = Math.abs(window.scrollY - scrollState.lastY) / dt;
+      scrollState.lastY = window.scrollY;
+      scrollState.lastT = now;
+      scrollState.targetBoost = Math.min(v / CONFIG.scrollForFullBoost, 1) * CONFIG.rotorBoostMax;
     };
 
     /* ----- Loop ----- */
@@ -198,25 +237,40 @@
     let elapsed = 0;
     let frameId = 0;
     let running = false;
-    let onScreen = true;
+    let onScreen = false;
+    let enabled = document.documentElement.dataset.fx !== 'off';
 
     function tick() {
       frameId = requestAnimationFrame(tick);
       const dt = Math.min(clock.getDelta(), 0.1);
       elapsed += dt;
 
-      spin.rotation.y += CONFIG.spinSpeed * dt;
+      // Scroll boost decays back to idle
+      scrollState.boost += (scrollState.targetBoost - scrollState.boost) * 0.08;
+      scrollState.targetBoost *= 0.92;
+      const rotorSpeed = CONFIG.rotorSpeed * (1 + scrollState.boost);
+      for (const r of rotors) r.rotation.y += r.userData.direction * rotorSpeed * dt;
+
+      yaw.rotation.y += CONFIG.yawSpeed * dt;
       hover.position.y = Math.sin(elapsed * 1.6) * 0.12;
-      for (const r of rotors) r.rotation.y += r.userData.direction * CONFIG.rotorSpeed * dt;
+
       tilt.rotation.x += (target.x - tilt.rotation.x) * CONFIG.tiltEase;
       tilt.rotation.z += (target.z - tilt.rotation.z) * CONFIG.tiltEase;
-      rings.rotation.y -= dt * 0.1;
+
+      // Drag rotation; eases back when released
+      if (!dragState.active) {
+        dragState.yaw *= 1 - CONFIG.dragReturnEase;
+        dragState.pitch *= 1 - CONFIG.dragReturnEase;
+      }
+      drag.rotation.y = dragState.yaw;
+      drag.rotation.x = dragState.pitch;
 
       renderer.render(scene, camera);
     }
 
     function update() {
-      const shouldRun = onScreen && !document.hidden && !reduceMotion.matches;
+      renderer.domElement.hidden = !enabled;
+      const shouldRun = enabled && onScreen && !document.hidden && !reduceMotion.matches;
       if (shouldRun && !running) {
         running = true;
         clock.getDelta();
@@ -225,7 +279,7 @@
         running = false;
         cancelAnimationFrame(frameId);
       }
-      if (!running) renderer.render(scene, camera); // keep a correct static frame
+      if (!running && enabled) renderer.render(scene, camera); // correct static frame
     }
 
     const io = new IntersectionObserver((entries) => {
@@ -233,11 +287,20 @@
       update();
     });
     io.observe(container);
-
     const ro = new ResizeObserver(resize);
     ro.observe(container);
 
+    const onToggle = (e) => {
+      enabled = !!e.detail.enabled;
+      update();
+    };
+
     window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('pointercancel', onPointerUp);
+    window.addEventListener('fx3d:change', onToggle);
     document.addEventListener('visibilitychange', update);
     reduceMotion.addEventListener('change', update);
 
@@ -247,11 +310,19 @@
       io.disconnect();
       ro.disconnect();
       window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('scroll', onScroll);
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
+      window.removeEventListener('fx3d:change', onToggle);
       document.removeEventListener('visibilitychange', update);
       reduceMotion.removeEventListener('change', update);
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) obj.material.dispose();
+        if (obj.material) {
+          if (obj.material.map) obj.material.map.dispose();
+          obj.material.dispose();
+        }
       });
       renderer.dispose();
       renderer.domElement.remove();
@@ -261,21 +332,26 @@
     });
 
     resize();
-    update();
-    window.Hero3D = { dispose, isRunning: () => running };
+    return { dispose, isRunning: () => running };
   }
 
   /* =====================================================================
-   * 5. Boot
+   * 4. Boot: wait for Three.js, then build lazily when the hero is first visible
    * ===================================================================== */
+  function lazyStart(THREE, container) {
+    const io = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      window.Hero3D = createHero(THREE, container);
+    });
+    io.observe(container);
+  }
+
   let attempts = 0;
   (function waitForThree() {
     const container = document.getElementById('hero-3d');
-    if (window.THREE && container) return start(window.THREE, container);
-    if (++attempts >= CONFIG.retry.attempts) {
-      if (container) container.classList.add('hero-fallback');
-      return;
-    }
+    if (window.THREE && container) return lazyStart(window.THREE, container);
+    if (++attempts >= CONFIG.retry.attempts) return; // CSS glow in .hero-visual remains
     setTimeout(waitForThree, CONFIG.retry.interval);
   })();
 })();

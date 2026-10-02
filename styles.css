@@ -697,6 +697,106 @@ textarea.field-input { resize: vertical; min-height: 140px; }
 .btn[disabled] { opacity: 0.75; cursor: progress; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ===== Hero visual: glow under the drone (also the fallback when 3D is off) ===== */
+.hero-visual {
+  background: radial-gradient(ellipse 45% 18% at 50% 78%, rgba(0, 212, 255, 0.18), transparent 70%);
+  touch-action: pan-y;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-visual { cursor: grab; }
+  .hero-visual.is-dragging { cursor: grabbing; }
+}
+.hero-visual canvas[hidden] { display: none; }
+
+/* ===== Motion (only when html.motion is set, i.e. reduced motion is off) ===== */
+.motion .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--t-reveal) var(--ease), transform var(--t-reveal) var(--ease);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+.motion .reveal.is-visible { opacity: 1; transform: none; }
+
+/* Skill chips stagger in after their card */
+.motion .skill-group .chip {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 300ms var(--ease), transform 300ms var(--ease);
+  transition-delay: calc(120ms + var(--i, 0) * 40ms);
+}
+.motion .skill-group.is-visible .chip { opacity: 1; transform: none; }
+
+.motion .typed-caret { animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.motion .status-dot { animation: pulse-dot 2.4s ease-in-out infinite; }
+@keyframes pulse-dot { 50% { opacity: 0.45; } }
+
+.motion .scroll-hint svg { animation: hint-bob 1.8s var(--ease) infinite; }
+@keyframes hint-bob { 50% { transform: translateY(4px); } }
+
+/* Timeline line draws itself as you scroll (main.js sets scaleY) */
+.motion .timeline-progress { transform: scaleY(0); }
+
+/* Pulsing NOW marker on the current role */
+.timeline-item.is-current .timeline-dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--success);
+  opacity: 0;
+}
+.motion .timeline-item.is-current .timeline-dot::after { animation: now-pulse 2s var(--ease) infinite; }
+@keyframes now-pulse {
+  0% { opacity: 0.8; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ===== Project card tilt and moving light ===== */
+.project-card { transform-style: preserve-3d; transition: transform 300ms var(--ease), border-color var(--t-hover) var(--ease), box-shadow var(--t-hover) var(--ease); }
+.project-card.is-tilting { transition: transform 80ms linear, border-color var(--t-hover) var(--ease); }
+.card-light {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at var(--light-x, 50%) var(--light-y, 50%), rgba(255, 255, 255, 0.08), transparent 55%);
+  transition: opacity var(--t-hover) var(--ease);
+}
+.project-card.is-tilting .card-light { opacity: 1; }
+
+/* ===== Custom cursor (fine pointers; added by main.js) ===== */
+.has-cursor,
+.has-cursor * { cursor: none !important; }
+.has-cursor input,
+.has-cursor textarea { cursor: text !important; }
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity var(--t-hover) var(--ease);
+}
+.cursor-visible .cursor-dot,
+.cursor-visible .cursor-ring { opacity: 1; }
+.cursor-dot { width: 6px; height: 6px; background: var(--cyan); }
+/* Ring size animates through a registered custom property used inside its transform */
+@property --ring-scale { syntax: '<number>'; inherits: false; initial-value: 1; }
+.cursor-ring {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid rgba(0, 212, 255, 0.55);
+  transition: opacity var(--t-hover) var(--ease), --ring-scale var(--t-hover) var(--ease), border-color var(--t-hover) var(--ease);
+}
+.cursor-ring.is-hover { --ring-scale: 1.6; border-color: rgba(139, 92, 246, 0.8); }
+.cursor-ring.is-down { --ring-scale: 0.75; }
+
 /* ===== Footer ===== */
 .site-footer { border-top: 1px solid var(--border); padding-block: 32px; }
 .footer-inner {
