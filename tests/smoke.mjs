@@ -8,6 +8,8 @@
  *                 the FormSubmit endpoint, the site's own URL and XML/schema namespaces)
  *  3. Build       index.html, manifest, robots.txt, sitemap.xml and 404.html match `node scripts/build.mjs`
  *  4. Syntax      browser scripts stay within ES2017
+ *  5. Offline     sw.js has a CACHE_VERSION and every app-shell file exists
+ *  6. Budget      weight limits from the brief
  * Exits with code 1 if any check fails.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -149,7 +151,7 @@ if (existsSync(buildPath)) {
 }
 
 /* ===== 4. ES2017 syntax in browser scripts ===== */
-const ES2017_FILES = ['data.js', 'diagrams.js', 'main.js', 'bg-3d.js', 'hero-3d.js', 'palette.js'];
+const ES2017_FILES = ['data.js', 'diagrams.js', 'main.js', 'bg-3d.js', 'hero-3d.js', 'palette.js', 'sw.js'];
 const ES_RULES = [
   [/\?\.[A-Za-z_$[(]/, 'optional chaining ?.'],
   [/\?\?/, 'nullish coalescing ??'],
@@ -162,6 +164,31 @@ for (const rel of ES2017_FILES) {
   const found = ES_RULES.filter(([re]) => re.test(code)).map(([, name]) => name);
   check(`${rel} stays within ES2017`, found.length === 0, found.join(', '));
 }
+
+/* ===== 5. Service worker ===== */
+const sw = read('sw.js');
+if (sw) {
+  check('sw.js defines CACHE_VERSION', /const CACHE_VERSION = '[^']+';/.test(sw));
+  const shell = [...sw.matchAll(/'\.\/([^']*)'/g)].map((m) => m[1]).filter(Boolean);
+  const missing = shell.filter((rel) => !existsSync(join(ROOT, rel)));
+  check(`every app-shell file in sw.js exists (${shell.length} files)`, missing.length === 0, missing.join(', '));
+}
+
+/* ===== 6. Weight budget (bytes, uncompressed) ===== */
+const size = (rel) => (existsSync(join(ROOT, rel)) ? statSync(join(ROOT, rel)).size : 0);
+const KB = (n) => `${(n / 1024).toFixed(1)} KB`;
+const coreFiles = ['index.html', 'styles.css', 'main.js', 'palette.js', 'diagrams.js'];
+const fontFiles = readdirSync(join(ROOT, 'fonts')).map((f) => `fonts/${f}`);
+const pageFiles = [...coreFiles, 'data.js', 'bg-3d.js', 'hero-3d.js', 'vendor/three.min.js', ...fontFiles];
+const core = coreFiles.reduce((n, f) => n + size(f), 0);
+const fonts = fontFiles.reduce((n, f) => n + size(f), 0);
+const everything = pageFiles.reduce((n, f) => n + size(f), 0);
+check(`HTML + CSS + main.js + palette.js + diagrams.js under 180 KB (${KB(core)})`, core < 180 * 1024);
+check(`fonts under 150 KB (${KB(fonts)})`, fonts < 150 * 1024);
+check(`everything the page loads, including Three.js, under 900 KB (${KB(everything)})`, everything < 900 * 1024);
+const images = projectFiles(ROOT, { text: false }).filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f));
+const bigImages = images.filter((f) => statSync(f).size > 100 * 1024).map((f) => relative(ROOT, f));
+check(`no image above 100 KB (${images.length} images)`, bigImages.length === 0, bigImages.join(', '));
 
 /* ===== Report ===== */
 let failed = 0;

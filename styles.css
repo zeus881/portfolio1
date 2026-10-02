@@ -599,6 +599,15 @@ img, svg { max-width: 100%; }
   .scroll-hint { display: flex; }
 }
 
+/* Short landscape phones: keep the name, roles and buttons on the first screen */
+@media (max-height: 480px) and (orientation: landscape) {
+  .section-hero { min-height: 0; padding-top: calc(var(--header-h) + 20px); padding-bottom: 40px; }
+  .hero-greeting { margin-top: 14px; }
+  .hero-name { font-size: 40px; }
+  .hero-roles { min-height: 1.6em; margin-top: 10px; font-size: 18px; }
+  .hero-actions { margin-top: 16px; }
+}
+
 /* ===== About ===== */
 .about-grid { display: grid; grid-gap: 16px; gap: 16px; }
 @media (min-width: 1024px) {

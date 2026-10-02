@@ -1008,6 +1008,15 @@
   $('#copy-email').addEventListener('click', copyEmail);
   initContactForm();
 
+  // Offline support on HTTPS (and localhost for testing); the page works the same without it
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {
+        /* unsupported or blocked: nothing to do */
+      });
+    });
+  }
+
   // Public API for palette.js
   window.Portfolio = {
     goToSection: function (id) {
