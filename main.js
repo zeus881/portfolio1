@@ -6,7 +6,8 @@
  *  1. Helpers and icons
  *  2. Navigation and header
  *  3. Section rendering (hero, about, skills, projects, experience, education, contact)
- *  4. Boot
+ *  4. Motion and interactions (typed roles, reveals, counters, scroll UI, cursor, card tilt)
+ *  5. Boot
  */
 'use strict';
 
@@ -413,7 +414,257 @@
   }
 
   /* =====================================================================
-   * 4. Boot
+   * 4. Motion and interactions
+   * ===================================================================== */
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const motionAllowed = () => !reduceMotion.matches;
+
+  /* ----- Typed role line (pauses while the hero is off-screen or the tab is hidden) ----- */
+  function initTypedRoles() {
+    const node = $('#typed-role');
+    const roles = owner.roles;
+    if (!node || roles.length < 2) return;
+    if (!motionAllowed()) {
+      node.textContent = roles.join(' | ');
+      return;
+    }
+
+    let roleIndex = 0;
+    let charIndex = roles[0].length;
+    let deleting = true;
+    let timer = 0;
+    let running = false;
+    let onScreen = true;
+
+    const step = () => {
+      let delay;
+      if (deleting) {
+        charIndex--;
+        delay = 35;
+        if (charIndex === 0) {
+          deleting = false;
+          roleIndex = (roleIndex + 1) % roles.length;
+          delay = 350;
+        }
+      } else {
+        charIndex++;
+        delay = 75;
+        if (charIndex === roles[roleIndex].length) {
+          deleting = true;
+          delay = 1800;
+        }
+      }
+      node.textContent = roles[roleIndex].slice(0, charIndex);
+      timer = setTimeout(step, delay);
+    };
+
+    const update = () => {
+      const shouldRun = onScreen && !document.hidden;
+      if (shouldRun && !running) {
+        running = true;
+        timer = setTimeout(step, 1800);
+      } else if (!shouldRun && running) {
+        running = false;
+        clearTimeout(timer);
+      }
+    };
+
+    new IntersectionObserver((entries) => {
+      onScreen = entries[0].isIntersecting;
+      update();
+    }).observe(node);
+    document.addEventListener('visibilitychange', update);
+  }
+
+  /* ----- Scroll reveals ----- */
+  function initReveals() {
+    const items = $$('.reveal');
+    if (!motionAllowed() || !('IntersectionObserver' in window)) {
+      items.forEach((n) => n.classList.add('is-visible'));
+      return;
+    }
+    document.documentElement.classList.add('motion');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+    );
+    items.forEach((n) => io.observe(n));
+  }
+
+  /* ----- Counters: count up once when visible ----- */
+  function initCounters() {
+    const counters = $$('.counter');
+    if (!motionAllowed()) return; // final values are already rendered
+    counters.forEach((n) => (n.textContent = '0'));
+
+    const animate = (node) => {
+      const target = Number(node.dataset.target);
+      const duration = 1600;
+      const startTime = performance.now();
+      const frame = (now) => {
+        const p = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        node.textContent = String(Math.round(target * eased));
+        if (p < 1) requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          animate(entry.target);
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.6 }
+    );
+    counters.forEach((n) => io.observe(n));
+  }
+
+  /* ----- Scroll-driven UI: progress bar, active nav link, back-to-top ----- */
+  function initScrollUI() {
+    const bar = $('#scroll-progress');
+    const sectionIds = ui.sections.map((s) => s.id);
+    const sections = sectionIds.map((id) => document.getElementById(id));
+    const links = $$('.nav-link');
+
+    const backToTop = el('button', { type: 'button', id: 'back-to-top', class: 'back-to-top', 'aria-label': ui.backToTop }, icon('up', 22));
+    document.body.append(backToTop);
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: motionAllowed() ? 'smooth' : 'auto' });
+      $('#main').focus({ preventScroll: true });
+    });
+
+    let activeId = '';
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+
+      bar.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+      backToTop.classList.toggle('is-visible', y > 400);
+
+      // Active section: last one whose top has passed 35% of the viewport; the last section wins at the bottom
+      const line = window.innerHeight * 0.35;
+      let current = sectionIds[0];
+      sections.forEach((s, i) => {
+        if (s.getBoundingClientRect().top <= line) current = sectionIds[i];
+      });
+      if (y >= max - 2) current = sectionIds[sectionIds.length - 1];
+
+      if (current !== activeId) {
+        activeId = current;
+        for (const link of links) {
+          const on = link.getAttribute('href') === `#${current}`;
+          link.classList.toggle('is-active', on);
+          if (on) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        }
+      }
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+
+  /* ----- Custom cursor: dot + trailing ring (desktop pointers only) ----- */
+  function initCursor() {
+    if (!finePointer.matches || !motionAllowed()) return;
+    const root = document.documentElement;
+    const dot = el('div', { class: 'cursor-dot', 'aria-hidden': 'true' });
+    const ring = el('div', { class: 'cursor-ring', 'aria-hidden': 'true' });
+    document.body.append(dot, ring);
+    root.classList.add('has-cursor');
+
+    let mx = 0;
+    let my = 0;
+    let rx = 0;
+    let ry = 0;
+    let frame = 0;
+    let shown = false;
+
+    const follow = () => {
+      rx += (mx - rx) * 0.2;
+      ry += (my - ry) * 0.2;
+      ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
+      // Stop the loop once the ring has caught up
+      frame = Math.abs(mx - rx) + Math.abs(my - ry) > 0.2 ? requestAnimationFrame(follow) : 0;
+    };
+
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        if (e.pointerType !== 'mouse') return;
+        mx = e.clientX;
+        my = e.clientY;
+        dot.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
+        if (!shown) {
+          shown = true;
+          rx = mx;
+          ry = my;
+          root.classList.add('cursor-visible');
+        }
+        if (!frame) frame = requestAnimationFrame(follow);
+      },
+      { passive: true }
+    );
+
+    const interactive = 'a, button, [role="button"], input, textarea, select, label, .project-card';
+    document.addEventListener('pointerover', (e) => ring.classList.toggle('is-hover', !!e.target.closest(interactive)));
+    document.addEventListener('pointerdown', () => ring.classList.add('is-down'));
+    document.addEventListener('pointerup', () => ring.classList.remove('is-down'));
+    root.addEventListener('mouseleave', () => root.classList.remove('cursor-visible'));
+    root.addEventListener('mouseenter', () => shown && root.classList.add('cursor-visible'));
+  }
+
+  /* ----- Project card tilt toward the cursor ----- */
+  function initCardTilt() {
+    if (!finePointer.matches || !motionAllowed()) return;
+    const MAX = 7; // degrees
+    for (const card of $$('.project-card')) {
+      let frame = 0;
+      card.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          card.style.transform = `perspective(900px) rotateX(${(-y * MAX).toFixed(2)}deg) rotateY(${(x * MAX).toFixed(2)}deg)`;
+          card.style.setProperty('--glare-x', `${((x + 0.5) * 100).toFixed(1)}%`);
+          card.style.setProperty('--glare-y', `${((y + 0.5) * 100).toFixed(1)}%`);
+          card.classList.add('is-tilting');
+        });
+      });
+      card.addEventListener('pointerleave', () => {
+        cancelAnimationFrame(frame);
+        card.style.transform = '';
+        card.classList.remove('is-tilting');
+      });
+    }
+  }
+
+  /* =====================================================================
+   * 5. Boot
    * ===================================================================== */
   renderNav();
   syncHeaderHeight();
@@ -427,4 +678,11 @@
   renderEducation();
   renderContact();
   renderFooter();
+
+  initReveals();
+  initTypedRoles();
+  initCounters();
+  initScrollUI();
+  initCursor();
+  initCardTilt();
 })();
