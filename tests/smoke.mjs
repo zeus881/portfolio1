@@ -149,7 +149,7 @@ if (existsSync(buildPath)) {
 }
 
 /* ===== 4. ES2017 syntax in browser scripts ===== */
-const ES2017_FILES = ['data.js'];
+const ES2017_FILES = ['data.js', 'diagrams.js', 'main.js'];
 const ES_RULES = [
   [/\?\.[A-Za-z_$[(]/, 'optional chaining ?.'],
   [/\?\?/, 'nullish coalescing ??'],

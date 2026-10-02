@@ -1,4 +1,6 @@
-# Keep vendor and binary assets byte-for-byte identical on every OS
+# LF everywhere, so generated files match byte-for-byte on every OS
+* text=auto eol=lf
+# Keep vendor and binary assets byte-for-byte identical
 vendor/** -text
 *.woff2 binary
 *.png binary
