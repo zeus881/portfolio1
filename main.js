@@ -7,7 +7,8 @@
  *  2. Navigation and header
  *  3. Section rendering (hero, about, skills, projects, experience, education, contact)
  *  4. Motion and interactions (typed roles, reveals, counters, scroll UI, cursor, card tilt)
- *  5. Boot
+ *  5. Projects (filters, modal) and contact form
+ *  6. Boot
  */
 'use strict';
 
@@ -664,7 +665,242 @@
   }
 
   /* =====================================================================
-   * 5. Boot
+   * 5. Projects (filters, modal) and contact form
+   * ===================================================================== */
+
+  /* ----- Project filters ----- */
+  function initProjectFilters() {
+    const grid = $('#project-grid');
+    const items = $$('.project-item', grid);
+    const buttons = $$('.filter-btn');
+    const status = $('#project-status');
+
+    const apply = (filter) => {
+      grid.dataset.filter = filter;
+      let shown = 0;
+      for (const item of items) {
+        const match = filter === 'All' || item.dataset.category === filter;
+        const wasHidden = item.hidden;
+        item.hidden = !match;
+        if (match) {
+          shown++;
+          item.classList.add('is-visible'); // filtered-in cards skip the scroll reveal
+          if (wasHidden) {
+            item.classList.remove('is-entering');
+            void item.offsetWidth; // restart the entry animation
+            item.classList.add('is-entering');
+          }
+        }
+      }
+      for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.filter === filter));
+      status.textContent = fmt(ui.projects.status, { n: shown, total: items.length });
+    };
+
+    for (const b of buttons) b.addEventListener('click', () => apply(b.dataset.filter));
+    grid.addEventListener('animationend', (e) => e.target.classList.remove('is-entering'));
+  }
+
+  /* ----- Project modal: native <dialog>, Esc / close button / outside click, focus trap ----- */
+  function initProjectModal() {
+    const dialog = $('#project-modal');
+    const panel = $('#modal-panel');
+    const root = document.documentElement;
+    const P = ui.projects;
+    let trigger = null;
+
+    const fill = (p) => {
+      const closeBtn = el('button', { type: 'button', class: 'modal-close', 'aria-label': P.close }, icon('close', 22));
+      closeBtn.addEventListener('click', () => dialog.close());
+
+      panel.replaceChildren(
+        closeBtn,
+        el('div', { class: 'flex flex-wrap items-center gap-2' }, [
+          el('span', { class: 'badge', text: p.category }),
+          p.featured ? el('span', { class: 'badge badge-featured', text: P.featured }) : null,
+        ]),
+        el('h2', { id: 'modal-title', class: 'modal-title', text: p.title }),
+        el('p', { class: 'mt-4 leading-relaxed text-muted', text: p.description }),
+        p.features.length
+          ? el('div', { class: 'mt-6' }, [
+              el('h3', { class: 'sub-heading', text: P.features }),
+              el('ul', { class: 'modal-features' }, p.features.map((f) => el('li', { text: f }))),
+            ])
+          : null,
+        el('div', { class: 'mt-6' }, [el('h3', { class: 'sub-heading', text: P.stack }), tagList(p.tags, P.stack)]),
+        p.link
+          ? el('div', { class: 'mt-8' },
+              externalLink({ class: 'btn btn-primary', href: p.link }, [el('i', { class: 'devicon-github-original', 'aria-hidden': 'true' }), P.github])
+            )
+          : null
+      );
+      return closeBtn;
+    };
+
+    const open = (id, from) => {
+      const project = DATA.projects.find((p) => p.id === id);
+      if (!project) return;
+      trigger = from;
+      const closeBtn = fill(project);
+      dialog.showModal();
+      root.classList.add('modal-open');
+      closeBtn.focus();
+    };
+
+    dialog.addEventListener('close', () => {
+      root.classList.remove('modal-open');
+      if (trigger) trigger.focus();
+      trigger = null;
+    });
+
+    // Click outside the panel (on the dialog's own padding area / backdrop) closes it
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+
+    // Focus trap: keep Tab and Shift+Tab inside the panel (Esc is handled natively by <dialog>)
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusables = $$('a[href], button:not([disabled])', panel);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    // Any click on a card opens it; the title button is the keyboard-accessible control
+    $('#project-grid').addEventListener('click', (e) => {
+      const card = e.target.closest('.project-card');
+      if (!card) return;
+      const button = $('.card-open', card);
+      open(button.dataset.project, button);
+    });
+  }
+
+  /* ----- Contact form: validation, FormSubmit AJAX, mailto fallback ----- */
+  function initContactForm() {
+    const form = $('#contact-form');
+    const submit = $('#cf-submit');
+    const spinner = $('.spinner', submit);
+    const label = $('.btn-label', submit);
+    const status = $('#form-status');
+    const C = ui.contact;
+    const ENDPOINT = `https://formsubmit.co/ajax/${owner.email}`;
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const names = ['name', 'email', 'subject', 'message'];
+    let attempted = false;
+
+    const input = (name) => form.elements[name];
+
+    const errorFor = (name) => {
+      const value = input(name).value.trim();
+      if (!value) return fmt(C.errors.required, { field: C.fields[name] });
+      if (name === 'email' && !EMAIL_RE.test(value)) return C.errors.email;
+      return '';
+    };
+
+    const showError = (name, message) => {
+      const field = input(name);
+      $(`#cf-${name}-err`).textContent = message;
+      if (message) field.setAttribute('aria-invalid', 'true');
+      else field.removeAttribute('aria-invalid');
+    };
+
+    const validate = () => {
+      let firstInvalid = null;
+      for (const name of names) {
+        const message = errorFor(name);
+        showError(name, message);
+        if (message && !firstInvalid) firstInvalid = input(name);
+      }
+      return firstInvalid;
+    };
+
+    // After the first submit attempt, re-check each field as the user fixes it
+    form.addEventListener('input', (e) => {
+      if (attempted && names.includes(e.target.name)) showError(e.target.name, errorFor(e.target.name));
+    });
+
+    const setStatus = (kind, text, link) => {
+      status.className = `form-status${kind ? ` is-${kind}` : ''}`;
+      status.replaceChildren(text);
+      if (link) status.append(' ', link);
+    };
+
+    const setSending = (sending) => {
+      submit.disabled = sending;
+      spinner.hidden = !sending;
+      label.textContent = sending ? C.sending : C.submit;
+    };
+
+    const mailtoUrl = (d) =>
+      `mailto:${owner.email}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(
+        `${d.message}\n\n${d.name} <${d.email}>`
+      )}`;
+
+    // Opened through a link click so the browser treats it as a normal navigation to the mail app
+    const openMailto = (url) => {
+      const a = el('a', { href: url, class: 'hidden' });
+      document.body.append(a);
+      a.click();
+      a.remove();
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      attempted = true;
+      setStatus('', '');
+
+      const firstInvalid = validate();
+      if (firstInvalid) {
+        firstInvalid.focus();
+        return;
+      }
+      if (form.elements._honey.value) return; // bot filled the honeypot
+
+      const data = Object.fromEntries(names.map((n) => [n, input(n).value.trim()]));
+      setSending(true);
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            _replyto: data.email,
+            _subject: data.subject,
+            message: data.message,
+            _template: 'table',
+            _captcha: 'false',
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || String(json.success) !== 'true') throw new Error(json.message || `HTTP ${res.status}`);
+
+        setStatus('success', C.success);
+        form.reset();
+        attempted = false;
+      } catch {
+        const url = mailtoUrl(data);
+        setStatus('error', C.failure, el('a', { href: url, text: C.failureLink }));
+        openMailto(url);
+      } finally {
+        setSending(false);
+      }
+    });
+  }
+
+  /* =====================================================================
+   * 6. Boot
    * ===================================================================== */
   renderNav();
   syncHeaderHeight();
@@ -685,4 +921,8 @@
   initScrollUI();
   initCursor();
   initCardTilt();
+
+  initProjectFilters();
+  initProjectModal();
+  initContactForm();
 })();

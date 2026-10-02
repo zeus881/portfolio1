@@ -508,6 +508,87 @@ textarea.field-input { resize: vertical; min-height: 9rem; }
 .btn[disabled] { opacity: 0.75; cursor: progress; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ===== Project filter: newly shown cards fade in ===== */
+.motion .project-item.is-entering { animation: card-in 0.45s ease both; }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ===== Project modal (native <dialog>) ===== */
+.modal {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--soft);
+  overflow-y: auto;
+}
+.modal[open] { display: grid; place-items: center; }
+.modal::backdrop { background: rgba(2, 4, 12, 0.75); backdrop-filter: blur(6px); }
+.modal-panel {
+  --accent: var(--electric);
+  position: relative;
+  width: 100%;
+  max-width: 44rem;
+  padding: 2rem 1.5rem;
+  background: rgba(10, 14, 32, 0.92);
+  box-shadow: 0 0 60px rgba(0, 212, 255, 0.15);
+}
+@media (min-width: 640px) { .modal-panel { padding: 2.5rem; } }
+.modal-panel:hover { border-color: var(--glass-border); box-shadow: 0 0 60px rgba(0, 212, 255, 0.15); }
+.modal-title {
+  margin-top: 0.75rem;
+  padding-right: 2.5rem;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.6rem;
+  border: 1px solid var(--glass-border);
+  color: var(--soft);
+  transition: background-color 0.2s, color 0.2s;
+}
+.modal-close:hover { background: rgba(255, 255, 255, 0.08); color: var(--electric); }
+.modal-features { margin-top: 0.75rem; display: grid; gap: 0.5rem; color: var(--muted); }
+.modal-features li { position: relative; padding-left: 1.25rem; line-height: 1.6; }
+.modal-features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--electric);
+  transform: rotate(45deg);
+}
+.motion .modal[open] .modal-panel { animation: modal-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1); }
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+html.modal-open { overflow: hidden; }
+/* The custom cursor sits below the dialog's top layer, so use the native cursor while it is open */
+.modal-open .cursor-dot,
+.modal-open .cursor-ring { display: none; }
+.has-cursor .modal,
+.has-cursor .modal * { cursor: auto !important; }
+.has-cursor .modal a,
+.has-cursor .modal button { cursor: pointer !important; }
+
 /* ===== Hero fallback (no WebGL / Three.js) ===== */
 .hero-visual.hero-fallback::after {
   content: '';
