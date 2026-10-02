@@ -10,7 +10,8 @@
  *  4. 3D: gating (WebGL, saveData, deviceMemory, 2G), lazy loading after first paint, on/off toggle
  *  5. Pointer effects: custom cursor, project card tilt
  *  6. Projects: filters, modal (cloned from the card markup + full diagram), deep links, back button
- *  7. Boot
+ *  7. Contact: toast, copy email, resume download, form (validation, honeypot, FormSubmit, mailto fallback)
+ *  8. Boot (also exposes window.Portfolio for palette.js)
  */
 (function () {
   'use strict';
@@ -773,7 +774,220 @@
   }
 
   /* =====================================================================
-   * 7. Boot
+   * 7. Contact: toast, copy email, resume download, form
+   * ===================================================================== */
+  var toastTimer = 0;
+  /** Short confirmation, announced politely. */
+  function toast(text) {
+    var node = $('#toast');
+    if (!node) {
+      node = document.createElement('div');
+      node.id = 'toast';
+      node.className = 'toast';
+      node.setAttribute('role', 'status');
+      node.setAttribute('aria-live', 'polite');
+      document.body.appendChild(node);
+    }
+    node.textContent = text;
+    node.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      node.classList.remove('is-visible');
+    }, 2200);
+  }
+
+  /** Clipboard API where allowed, hidden textarea + execCommand otherwise. */
+  function copyText(text) {
+    var fallback = function () {
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.className = 'sr-only';
+      document.body.appendChild(area);
+      area.select();
+      area.setSelectionRange(0, text.length); // iOS
+      var ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch (err) {
+        ok = false;
+      }
+      document.body.removeChild(area);
+      return ok;
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(
+        function () {
+          return true;
+        },
+        function () {
+          return fallback();
+        }
+      );
+    }
+    return Promise.resolve(fallback());
+  }
+
+  function copyEmail() {
+    var C = ui.contact;
+    var button = $('#copy-email');
+    var label = $('.copy-label', button);
+    return copyText(owner.email).then(function (ok) {
+      button.classList.toggle('is-copied', ok);
+      label.textContent = ok ? C.copied : C.copyEmail;
+      toast(ok ? C.copied + ': ' + owner.email : C.copyFailed);
+      setTimeout(function () {
+        button.classList.remove('is-copied');
+        label.textContent = C.copyEmail;
+      }, 2000);
+      return ok;
+    });
+  }
+
+  /** Resume download through a temporary link (also works from file://). */
+  function downloadResume() {
+    var a = document.createElement('a');
+    a.href = owner.resume;
+    a.setAttribute('download', '');
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function openMailto(url) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  /** Validation with inline messages, honeypot, FormSubmit AJAX, mailto fallback on any failure. */
+  function initContactForm() {
+    var form = $('#contact-form');
+    var submit = $('#cf-submit');
+    var spinner = $('.spinner', submit);
+    var label = $('.btn-label', submit);
+    var status = $('#form-status');
+    var C = ui.contact;
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    var names = ['name', 'email', 'subject', 'message'];
+    var attempted = false;
+    form.noValidate = true; // inline messages replace the browser bubbles
+
+    var field = function (name) {
+      return form.elements[name];
+    };
+    var errorFor = function (name) {
+      var value = field(name).value.trim();
+      if (!value) return fmt(C.errors.required, { field: C.fields[name] });
+      if (name === 'email' && !EMAIL_RE.test(value)) return C.errors.email;
+      return '';
+    };
+    var showError = function (name, message) {
+      $('#cf-' + name + '-err').textContent = message;
+      if (message) field(name).setAttribute('aria-invalid', 'true');
+      else field(name).removeAttribute('aria-invalid');
+    };
+    var validate = function () {
+      var firstInvalid = null;
+      names.forEach(function (name) {
+        var message = errorFor(name);
+        showError(name, message);
+        if (message && !firstInvalid) firstInvalid = field(name);
+      });
+      return firstInvalid;
+    };
+    var setStatus = function (kind, text, link) {
+      status.className = 'form-status' + (kind ? ' is-' + kind : '');
+      status.textContent = text;
+      if (link) {
+        status.appendChild(document.createTextNode(' '));
+        status.appendChild(link);
+      }
+    };
+    var setSending = function (sending) {
+      submit.disabled = sending;
+      spinner.hidden = !sending;
+      label.textContent = sending ? C.sending : C.submit;
+    };
+    var mailtoUrl = function (d) {
+      return 'mailto:' + owner.email + '?subject=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.message + '\n\n' + d.name + ' <' + d.email + '>');
+    };
+
+    form.addEventListener('input', function (e) {
+      if (attempted && names.indexOf(e.target.name) >= 0) showError(e.target.name, errorFor(e.target.name));
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      attempted = true;
+      setStatus('', '');
+      var firstInvalid = validate();
+      if (firstInvalid) {
+        firstInvalid.focus();
+        return;
+      }
+      if (form.elements._honey.value) return; // a bot filled the honeypot: ignore silently
+
+      var data = {};
+      names.forEach(function (n) {
+        data[n] = field(n).value.trim();
+      });
+      setSending(true);
+      var controller = 'AbortController' in window ? new AbortController() : null;
+      var timeout = setTimeout(function () {
+        if (controller) controller.abort();
+      }, 10000);
+      fetch(DATA.site.formEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          _replyto: data.email,
+          _subject: data.subject,
+          message: data.message,
+          _template: 'table',
+          _captcha: 'false',
+        }),
+        signal: controller ? controller.signal : undefined,
+      })
+        .then(function (res) {
+          return res.json().then(
+            function (json) {
+              return { ok: res.ok, json: json };
+            },
+            function () {
+              return { ok: res.ok, json: {} };
+            }
+          );
+        })
+        .then(function (r) {
+          if (!r.ok || String(r.json.success) !== 'true') throw new Error('not sent');
+          setStatus('success', C.success);
+          form.reset();
+          attempted = false;
+        })
+        .catch(function () {
+          var url = mailtoUrl(data);
+          var link = document.createElement('a');
+          link.href = url;
+          link.textContent = C.failureLink;
+          setStatus('error', C.failure, link);
+          openMailto(url);
+        })
+        .then(function () {
+          clearTimeout(timeout);
+          setSending(false);
+        });
+    });
+  }
+
+  /* =====================================================================
+   * 8. Boot
    * ===================================================================== */
   if (!hasIO) root.classList.remove('motion');
   initBootScreen();
@@ -791,4 +1005,27 @@
   init3D();
   initProjectFilters();
   initProjectModal();
+  $('#copy-email').addEventListener('click', copyEmail);
+  initContactForm();
+
+  // Public API for palette.js
+  window.Portfolio = {
+    goToSection: function (id) {
+      var target = document.getElementById(id);
+      if (!target) return;
+      if (history.pushState) history.pushState(null, '', '#' + id);
+      scrollToElement(target, true);
+    },
+    openProject: function (slug) {
+      openProject(slug);
+    },
+    downloadResume: downloadResume,
+    copyEmail: copyEmail,
+    toggleFx: toggleFx,
+    openGitHub: function () {
+      window.open(owner.github, '_blank', 'noopener');
+    },
+    trapFocus: trapFocus,
+    setPageHidden: setPageHidden,
+  };
 })();
