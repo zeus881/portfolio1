@@ -1,49 +1,71 @@
 /*
  * data.js
  * Single source of truth for every piece of text on the site.
- * main.js reads window.PORTFOLIO_DATA and renders it; nothing here is duplicated in HTML.
+ * main.js, diagrams.js and palette.js read window.PORTFOLIO_DATA; nothing here is repeated in HTML.
+ * tests/smoke.mjs validates this file (counts, slugs, links, empty strings, phone numbers).
  *
- * Editing guide:
- *  - owner     : name, roles, bio, links
- *  - counters  : About section stats (value counts up; prefix/suffix are static)
- *  - skills    : groups of chips; `icon` is a Devicon class (omit when none exists)
- *  - projects  : `category` must be one of `projectFilters` (except "All");
- *                `featured` cards span two columns on desktop; `link: null` hides the GitHub button
- *  - experience: newest first
- *  - education : degree + certifications
- *  - ui        : navigation, section headings, button and form labels
+ * Editing guide
+ *  owner       name, roles (typed line), status strip, bio, links
+ *  counters    About stats; `value` counts up, optional `prefix`/`suffix` stay fixed
+ *  whatIDo     the three About cards; `icon` is a key of ICONS in main.js
+ *  skills      groups of chips; `icon` is a Devicon class (omit when none exists)
+ *  projects    `slug` drives deep links (#project-<slug>); `category` must be in projectFilters;
+ *              `featured` cards span two columns and carry a `diagram`; `link: null` hides the GitHub button
+ *  diagram     nodes on a col/row grid, edges between node or group ids (`both: true` = two-way arrow),
+ *              groups draw a frame around member nodes; `sub` is an optional second line;
+ *              `kind` styles a node: external | service | bus | store | client
+ *  experience  newest first; `current: true` shows the NOW marker
+ *  palette     command palette actions (sections and projects are added automatically)
+ *  ui          navigation, section labels, buttons and form text
  */
 'use strict';
 
 window.PORTFOLIO_DATA = {
-  /* ---------- Owner ---------- */
+  /* ===== Owner ===== */
   owner: {
     name: 'Sanjay Kumar',
     initials: 'SK',
-    roles: [
-      'Backend Engineer',
-      'UAV Systems & Autonomy',
-      'REST/GraphQL APIs',
-      'Event-Driven Services',
-    ],
+    roles: ['Full Stack Developer', 'Backend & APIs', 'UAV Systems & Autonomy', 'Real-Time Web & 3D'],
     location: 'Greater Noida, India',
+    timeZone: 'Asia/Kolkata',
+    timeZoneLabel: 'IST',
+    status: 'Available for opportunities',
     bio:
-      'Backend Engineer with 2+ years building and operating Python-based services, REST APIs and event-driven systems used by multiple clients. Designs containerized microservices with Docker and Kubernetes, works with SQL and DynamoDB, and uses MQTT to synchronize 100+ connected devices in real time. Focused on correctness, performance and reliability.',
+      'Full Stack Developer with 2+ years building Python-based services, REST APIs, event-driven systems and the web interfaces that sit on top of them. Designs containerized microservices with Docker and Kubernetes, works with SQL and DynamoDB, and uses MQTT to synchronize 100+ connected devices in real time. Focused on correctness, performance and reliability.',
     email: 'sanjaykumarr99009@gmail.com',
     github: 'https://github.com/zeus881',
     linkedin: 'https://linkedin.com/in/sanjay-kumar-7689531b5',
     resume: './Sanjay_Kumar_Resume.pdf',
   },
 
-  /* ---------- About counters ---------- */
+  /* ===== About: counters ===== */
   counters: [
-    { value: 2, prefix: '', suffix: '+', label: 'Years of experience' },
-    { value: 100, prefix: '', suffix: '+', label: 'Devices synchronized in real time' },
+    { value: 2, suffix: '+', label: 'Years of experience' },
+    { value: 100, suffix: '+', label: 'Devices synchronized in real time' },
     { value: 200, prefix: '<', suffix: ' ms', label: 'Video pipeline latency' },
-    { value: 30, prefix: '', suffix: '%', label: 'Improvement in targeting accuracy' },
+    { value: 30, suffix: '%', label: 'Improvement in targeting accuracy' },
   ],
 
-  /* ---------- Skills ---------- */
+  /* ===== About: what I do ===== */
+  whatIDo: [
+    {
+      title: 'Frontend & 3D Web',
+      icon: 'web',
+      text: 'Web interfaces in HTML, CSS, JavaScript and TypeScript, with Tailwind CSS and Three.js for interactive 3D.',
+    },
+    {
+      title: 'Backend & APIs',
+      icon: 'api',
+      text: 'REST and GraphQL APIs, event-driven services and containerized microservices in Python and Elixir, secured with OAuth2/RBAC via Keycloak.',
+    },
+    {
+      title: 'UAV & Real-Time Systems',
+      icon: 'drone',
+      text: 'MAVLink/PX4 telemetry for a custom Ground Control Station, a sub-200 ms GStreamer/WebRTC video pipeline and MQTT sync for 100+ devices.',
+    },
+  ],
+
+  /* ===== Skills (10 groups) ===== */
   skills: [
     {
       group: 'Languages',
@@ -59,6 +81,17 @@ window.PORTFOLIO_DATA = {
       ],
     },
     {
+      group: 'Frontend',
+      items: [
+        { name: 'HTML', icon: 'devicon-html5-plain' },
+        { name: 'CSS', icon: 'devicon-css3-plain' },
+        { name: 'JavaScript', icon: 'devicon-javascript-plain' },
+        { name: 'TypeScript', icon: 'devicon-typescript-plain' },
+        { name: 'Tailwind CSS', icon: 'devicon-tailwindcss-original' },
+        { name: 'Three.js', icon: 'devicon-threejs-original' },
+      ],
+    },
+    {
       group: 'Backend & APIs',
       items: [
         { name: 'REST' },
@@ -71,12 +104,7 @@ window.PORTFOLIO_DATA = {
     },
     {
       group: 'Messaging & Real-Time',
-      items: [
-        { name: 'MQTT' },
-        { name: 'WebRTC' },
-        { name: 'Device synchronization' },
-        { name: 'Telemetry' },
-      ],
+      items: [{ name: 'MQTT' }, { name: 'WebRTC' }, { name: 'Device synchronization' }, { name: 'Telemetry' }],
     },
     {
       group: 'Cloud & DevOps',
@@ -106,12 +134,7 @@ window.PORTFOLIO_DATA = {
     },
     {
       group: 'Performance & Reliability',
-      items: [
-        { name: 'Latency profiling' },
-        { name: 'Logging' },
-        { name: 'Log and telemetry analysis' },
-        { name: 'Anomaly detection' },
-      ],
+      items: [{ name: 'Latency profiling' }, { name: 'Logging' }, { name: 'Log and telemetry analysis' }, { name: 'Anomaly detection' }],
     },
     {
       group: 'Applied AI/ML',
@@ -136,12 +159,12 @@ window.PORTFOLIO_DATA = {
     },
   ],
 
-  /* ---------- Projects ---------- */
+  /* ===== Projects ===== */
   projectFilters: ['All', 'Drones', 'Backend', 'AI', 'Web'],
 
   projects: [
     {
-      id: 'gandiv-gcs',
+      slug: 'gandiv-gcs',
       title: 'GANDIV GCS',
       category: 'Drones',
       featured: true,
@@ -157,9 +180,39 @@ window.PORTFOLIO_DATA = {
       ],
       tags: ['Rust', 'Go', 'React', 'CesiumJS', 'NATS', 'TimescaleDB'],
       link: null,
+      diagram: {
+        cols: 5,
+        rows: 5,
+        nodes: [
+          { id: 'vehicles', label: 'Vehicles', kind: 'external', col: 0, row: 2 },
+          { id: 'mavlink', label: 'mavlink-core', sub: 'Rust', kind: 'service', col: 1, row: 2 },
+          { id: 'nats', label: 'NATS', kind: 'bus', col: 2, row: 2 },
+          { id: 'vehicle-manager', label: 'vehicle-manager', sub: 'Go', kind: 'service', col: 3, row: 0 },
+          { id: 'mission-service', label: 'mission-service', sub: 'Go', kind: 'service', col: 3, row: 1 },
+          { id: 'telemetry-recorder', label: 'telemetry-recorder', sub: 'Rust', kind: 'service', col: 3, row: 2 },
+          { id: 'swarm-engine', label: 'swarm-engine', sub: 'Python', kind: 'service', col: 3, row: 3 },
+          { id: 'api-gateway', label: 'api-gateway', sub: 'Go', kind: 'service', col: 3, row: 4 },
+          { id: 'db', label: 'PostgreSQL + TimescaleDB', kind: 'store', col: 4, row: 1 },
+          { id: 'console', label: 'React + CesiumJS console', kind: 'client', col: 4, row: 4 },
+        ],
+        groups: [
+          { id: 'services', label: 'Services', members: ['vehicle-manager', 'mission-service', 'telemetry-recorder', 'swarm-engine', 'api-gateway'] },
+        ],
+        edges: [
+          { from: 'vehicles', to: 'mavlink', both: true },
+          { from: 'mavlink', to: 'nats', both: true },
+          { from: 'nats', to: 'vehicle-manager', both: true },
+          { from: 'nats', to: 'mission-service', both: true },
+          { from: 'nats', to: 'telemetry-recorder', both: true },
+          { from: 'nats', to: 'swarm-engine', both: true },
+          { from: 'nats', to: 'api-gateway', both: true },
+          { from: 'services', to: 'db' },
+          { from: 'api-gateway', to: 'console', both: true },
+        ],
+      },
     },
     {
-      id: 'swarm-simulator',
+      slug: 'drone-swarm-simulator',
       title: 'Drone Swarm Simulator',
       category: 'Drones',
       featured: true,
@@ -175,9 +228,37 @@ window.PORTFOLIO_DATA = {
       ],
       tags: ['Python', 'NumPy', 'FastAPI', 'Three.js', 'MAVLink'],
       link: 'https://github.com/zeus881/swarm-simualation',
+      diagram: {
+        cols: 4,
+        rows: 4,
+        nodes: [
+          { id: 'gcs', label: 'Browser GCS', sub: 'Three.js', kind: 'client', col: 0, row: 1 },
+          { id: 'api', label: 'FastAPI', sub: 'REST + WebSocket', kind: 'service', col: 1, row: 1 },
+          { id: 'engine', label: 'Simulation engine', sub: '30 Hz', kind: 'bus', col: 2, row: 1 },
+          { id: 'algorithms', label: 'Algorithms', sub: 'ORCA, formations, flocking', kind: 'service', col: 3, row: 0 },
+          { id: 'missions', label: 'Missions', kind: 'service', col: 3, row: 1 },
+          { id: 'kalman', label: 'Kalman estimation', kind: 'service', col: 3, row: 2 },
+          { id: 'reports', label: 'Replay and reports', kind: 'client', col: 0, row: 3 },
+          { id: 'recorder', label: 'Recorder', kind: 'store', col: 1, row: 3 },
+          { id: 'adapters', label: 'MAVLink adapters', kind: 'service', col: 2, row: 3 },
+          { id: 'sitl', label: 'SITL vehicles', kind: 'external', col: 3, row: 3 },
+        ],
+        groups: [],
+        edges: [
+          { from: 'gcs', to: 'api', both: true },
+          { from: 'api', to: 'engine', both: true },
+          { from: 'algorithms', to: 'engine' },
+          { from: 'missions', to: 'engine' },
+          { from: 'kalman', to: 'engine' },
+          { from: 'engine', to: 'recorder' },
+          { from: 'recorder', to: 'reports' },
+          { from: 'engine', to: 'adapters', both: true },
+          { from: 'adapters', to: 'sitl', both: true },
+        ],
+      },
     },
     {
-      id: 'retail-automation',
+      slug: 'retail-automation-system',
       title: 'Real-Time Retail Automation System',
       category: 'Backend',
       featured: true,
@@ -186,9 +267,27 @@ window.PORTFOLIO_DATA = {
       features: [],
       tags: ['Elixir', 'Phoenix', 'MQTT', 'Docker', 'Kubernetes', 'Keycloak'],
       link: null,
+      diagram: {
+        cols: 5,
+        rows: 1,
+        nodes: [
+          { id: 'clients', label: 'Client apps', kind: 'client', col: 0, row: 0 },
+          { id: 'keycloak', label: 'Keycloak', sub: 'OAuth2/RBAC', kind: 'service', col: 1, row: 0 },
+          { id: 'phoenix', label: 'Phoenix backend', kind: 'service', col: 2, row: 0 },
+          { id: 'mqtt', label: 'MQTT broker', kind: 'bus', col: 3, row: 0 },
+          { id: 'devices', label: '100+ devices', kind: 'external', col: 4, row: 0 },
+        ],
+        groups: [{ id: 'cluster', label: 'Docker / Kubernetes', members: ['phoenix'] }],
+        edges: [
+          { from: 'clients', to: 'keycloak' },
+          { from: 'keycloak', to: 'phoenix' },
+          { from: 'phoenix', to: 'mqtt', both: true },
+          { from: 'mqtt', to: 'devices', both: true },
+        ],
+      },
     },
     {
-      id: 'aastha',
+      slug: 'aastha-ai-assistant',
       title: 'Aastha, Local AI Desktop Assistant',
       category: 'AI',
       featured: false,
@@ -199,7 +298,7 @@ window.PORTFOLIO_DATA = {
       link: null,
     },
     {
-      id: 'client-ranking',
+      slug: 'ai-client-ranking',
       title: 'AI Client Ranking System',
       category: 'AI',
       featured: false,
@@ -210,7 +309,7 @@ window.PORTFOLIO_DATA = {
       link: 'https://github.com/zeus881/clinet-ranking-system-LLM',
     },
     {
-      id: 'shop-in',
+      slug: 'shop-in',
       title: 'Shop-In',
       category: 'Web',
       featured: false,
@@ -220,7 +319,7 @@ window.PORTFOLIO_DATA = {
       link: 'https://github.com/zeus881/shop-in',
     },
     {
-      id: 'weather-app',
+      slug: 'weather-forecast-app',
       title: 'Weather Forecast App',
       category: 'Web',
       featured: false,
@@ -230,7 +329,7 @@ window.PORTFOLIO_DATA = {
       link: 'https://github.com/zeus881/Weather-app-real',
     },
     {
-      id: 'tech-traveler',
+      slug: 'tech-traveler',
       title: 'Tech-Traveler',
       category: 'Web',
       featured: false,
@@ -240,7 +339,7 @@ window.PORTFOLIO_DATA = {
       link: 'https://github.com/zeus881/Tech-Traveler',
     },
     {
-      id: 'tcp-chat',
+      slug: 'tcp-chat',
       title: 'TCP Chat',
       category: 'Backend',
       featured: false,
@@ -251,7 +350,7 @@ window.PORTFOLIO_DATA = {
     },
   ],
 
-  /* ---------- Experience (newest first) ---------- */
+  /* ===== Experience (newest first) ===== */
   experience: [
     {
       role: 'Software Engineer, UAV Systems & Autonomy',
@@ -259,6 +358,7 @@ window.PORTFOLIO_DATA = {
       location: 'Noida',
       start: 'May 2026',
       end: 'Present',
+      current: true,
       points: [
         'Builds real-time backend services and data pipelines, including a GStreamer/WebRTC video pipeline optimized for sub-200 ms latency.',
         'Integrates MAVLink/PX4 telemetry into a custom Ground Control Station, validated end to end in simulation.',
@@ -273,6 +373,7 @@ window.PORTFOLIO_DATA = {
       location: 'Greater Noida',
       start: 'Feb 2026',
       end: 'May 2026',
+      current: false,
       points: [
         'Built containerized backend services with Docker and Podman; OAuth2/RBAC via Keycloak across microservices.',
         'Developed REST APIs and event-driven services in Python and Elixir/Phoenix, syncing 100+ devices via MQTT.',
@@ -286,6 +387,7 @@ window.PORTFOLIO_DATA = {
       location: 'Bengaluru',
       start: 'Jan 2025',
       end: 'Feb 2026',
+      current: false,
       points: [
         'Delivered Python automation tools and AWS Lambda/EC2 pipelines for defence-grade software projects.',
         'Built RESTful APIs integrated with S3, DynamoDB, API Gateway and IAM.',
@@ -295,7 +397,7 @@ window.PORTFOLIO_DATA = {
     },
   ],
 
-  /* ---------- Education & certifications ---------- */
+  /* ===== Education and certifications ===== */
   education: {
     degrees: [
       {
@@ -311,20 +413,47 @@ window.PORTFOLIO_DATA = {
     ],
   },
 
-  /* ---------- UI labels ---------- */
+  /* ===== Command palette actions ===== */
+  palette: {
+    actions: [
+      { id: 'resume', label: 'Download resume' },
+      { id: 'copy-email', label: 'Copy email' },
+      { id: 'toggle-3d', label: 'Toggle 3D' },
+      { id: 'github', label: 'Open GitHub' },
+    ],
+  },
+
+  /* ===== UI labels ===== */
   ui: {
     skipLink: 'Skip to content',
     menuOpen: 'Open menu',
     menuClose: 'Close menu',
     resumeButton: 'Download Resume',
+    toggle3dOn: '3D on',
+    toggle3dOff: '3D off',
+    toggle3dLabel: 'Toggle 3D effects',
+    paletteHint: 'Open command palette',
     backToTop: 'Back to top',
     newTab: '(opens in a new tab)',
-    footer: 'Built with Three.js, Tailwind CSS and plain JavaScript.',
+    footerBuilt: 'Built with Three.js',
+    // Order = page order. `id` matches a <section id> in index.html; `label` becomes "// 03 PROJECTS".
+    sections: [
+      { id: 'home', nav: 'Home', label: 'HOME' },
+      { id: 'about', nav: 'About', label: 'ABOUT', title: 'About Me' },
+      { id: 'skills', nav: 'Skills', label: 'SKILLS', title: 'Skills' },
+      { id: 'projects', nav: 'Projects', label: 'PROJECTS', title: 'Projects' },
+      { id: 'experience', nav: 'Experience', label: 'EXPERIENCE', title: 'Experience' },
+      { id: 'education', nav: 'Education', label: 'EDUCATION', title: 'Education & Certifications' },
+      { id: 'contact', nav: 'Contact', label: 'CONTACT', title: 'Get In Touch' },
+    ],
     hero: {
       greeting: "Hi, I'm",
       ctaProjects: 'View Projects',
       ctaContact: 'Contact',
+      scrollHint: 'Scroll',
+      localTime: 'Local time',
     },
+    about: { whatIDoHeading: 'What I do' },
     projects: {
       filterLabel: 'Filter projects by category',
       status: 'Showing {n} of {total} projects',
@@ -332,17 +461,21 @@ window.PORTFOLIO_DATA = {
       details: 'View details',
       features: 'Key features',
       stack: 'Tech stack',
+      architecture: 'Architecture',
+      diagramLabel: 'Architecture diagram of {title}',
       github: 'View on GitHub',
       close: 'Close project details',
     },
-    education: {
-      degrees: 'Degree',
-      certifications: 'Certifications',
-    },
+    experience: { now: 'NOW' },
+    education: { degrees: 'Degree', certifications: 'Certifications' },
     contact: {
       directHeading: 'Reach me directly',
       formHeading: 'Send a message',
-      links: { email: 'Email', github: 'GitHub', linkedin: 'LinkedIn', location: 'Location' },
+      copyEmail: 'Copy email',
+      copied: 'Copied',
+      copyFailed: 'Copy failed, select the address instead',
+      github: 'GitHub',
+      linkedin: 'LinkedIn',
       fields: { name: 'Name', email: 'Email', subject: 'Subject', message: 'Message' },
       submit: 'Send Message',
       sending: 'Sending…',
@@ -354,15 +487,12 @@ window.PORTFOLIO_DATA = {
         email: 'Enter a valid email address, for example name@example.com.',
       },
     },
-    // Order here = order on the page. `id` must match a <section id> in index.html.
-    sections: [
-      { id: 'home', nav: 'Home', eyebrow: '', title: '' },
-      { id: 'about', nav: 'About', eyebrow: '01', title: 'About Me' },
-      { id: 'skills', nav: 'Skills', eyebrow: '02', title: 'Skills' },
-      { id: 'projects', nav: 'Projects', eyebrow: '03', title: 'Projects' },
-      { id: 'experience', nav: 'Experience', eyebrow: '04', title: 'Experience' },
-      { id: 'education', nav: 'Education', eyebrow: '05', title: 'Education & Certifications' },
-      { id: 'contact', nav: 'Contact', eyebrow: '06', title: 'Get In Touch' },
-    ],
+    palette: {
+      title: 'Command palette',
+      placeholder: 'Search sections, projects and actions',
+      empty: 'No matches',
+      groups: { sections: 'Sections', projects: 'Projects', actions: 'Actions' },
+      hint: 'Navigate with arrow keys, run with Enter, close with Esc',
+    },
   },
 };
