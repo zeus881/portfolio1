@@ -937,7 +937,7 @@
     const label = $('.btn-label', submit);
     const status = $('#form-status');
     const C = ui.contact;
-    const ENDPOINT = `https://formsubmit.co/ajax/${owner.email}`;
+    const ENDPOINT = DATA.site.formEndpoint;
     const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const names = ['name', 'email', 'subject', 'message'];
     let attempted = false;

@@ -1,0 +1,6 @@
+# Keep vendor and binary assets byte-for-byte identical on every OS
+vendor/** -text
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.pdf binary
