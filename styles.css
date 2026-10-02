@@ -1,8 +1,8 @@
 /*
  * styles.css
  * Custom styles that Tailwind utilities do not cover:
- * colour tokens, background fallback, glass cards, buttons, nav, section headings.
- * Later phases add the cursor, reveal animations and modal styles here.
+ * colour tokens, background fallback, glass cards, buttons, nav, section layouts,
+ * reveal animations, scroll progress, back-to-top, card tilt, custom cursor and the project modal.
  */
 
 /* ===== Colour tokens ===== */

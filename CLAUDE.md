@@ -45,7 +45,7 @@ Single-page developer portfolio. No framework, no bundler, no npm dependencies, 
 - All text content lives in `data.js`; `main.js` renders it. Never hard-code content in two places. Do not invent content.
 - Never show a phone number.
 - No API keys or secrets anywhere.
-- No console errors or warnings.
+- No console errors or warnings. Known, accepted exception: the Tailwind Play CDN's own "should not be used in production" warning (no-build setup).
 - Semantic HTML, alt text, visible focus states, keyboard access to nav, filters, cards and modal; body text contrast ≥ 4.5:1.
 - Responsive 360 px to 4K; no horizontal scroll at any width.
 - SEO: title "Sanjay Kumar | Backend Engineer & UAV Systems", meta description, Open Graph tags, inline SVG favicon.
