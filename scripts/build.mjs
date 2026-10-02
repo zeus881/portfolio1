@@ -348,7 +348,10 @@ function renderOverlays() {
   const L = ui.palette;
   return `<div id="project-modal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
   <div class="overlay-backdrop" data-close></div>
-  <div id="modal-panel" class="modal-panel" tabindex="-1"></div>
+  <div id="modal-panel" class="modal-panel">
+    <button type="button" class="icon-btn modal-close" data-close aria-label="${esc(ui.projects.close)}">${icon('close', 20)}</button>
+    <div id="modal-content"></div>
+  </div>
 </div>
 <div id="palette" class="overlay" role="dialog" aria-modal="true" aria-label="${esc(L.title)}" hidden>
   <div class="overlay-backdrop" data-close></div>

@@ -9,7 +9,8 @@
  *  3. Hero and sections: boot screen, typed roles, India time, reveals, counters, footer year
  *  4. 3D: gating (WebGL, saveData, deviceMemory, 2G), lazy loading after first paint, on/off toggle
  *  5. Pointer effects: custom cursor, project card tilt
- *  6. Boot
+ *  6. Projects: filters, modal (cloned from the card markup + full diagram), deep links, back button
+ *  7. Boot
  */
 (function () {
   'use strict';
@@ -534,7 +535,245 @@
   }
 
   /* =====================================================================
-   * 6. Boot
+   * 6. Projects: filters, modal, deep links
+   * ===================================================================== */
+  function fmt(tpl, vars) {
+    return tpl.replace(/\{(\w+)\}/g, function (_, k) {
+      return k in vars ? vars[k] : '';
+    });
+  }
+
+  /** Filters with a FLIP layout transition where the Web Animations API exists. */
+  function initProjectFilters() {
+    var grid = $('#project-grid');
+    var items = $$('.project-item', grid);
+    var buttons = $$('.filter-btn');
+    var status = $('#project-status');
+    var canAnimate = typeof Element.prototype.animate === 'function';
+
+    var apply = function (filter) {
+      var before = items
+        .filter(function (i) {
+          return !i.hidden;
+        })
+        .map(function (i) {
+          return { item: i, rect: i.getBoundingClientRect() };
+        });
+      grid.setAttribute('data-filter', filter);
+      var shown = 0;
+      items.forEach(function (item) {
+        var match = filter === 'All' || item.getAttribute('data-category') === filter;
+        item.hidden = !match;
+        if (match) {
+          shown++;
+          item.classList.add('is-visible'); // filtered-in cards skip the scroll reveal
+        }
+      });
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === filter));
+      });
+      status.textContent = fmt(ui.projects.status, { n: shown, total: items.length });
+
+      if (!canAnimate || !motionOn()) return;
+      items.forEach(function (item) {
+        if (item.hidden) return;
+        var after = item.getBoundingClientRect();
+        var first = null;
+        before.forEach(function (b) {
+          if (b.item === item) first = b.rect;
+        });
+        var opts = { duration: 500, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+        if (first) {
+          var dx = first.left - after.left;
+          var dy = first.top - after.top;
+          if (dx || dy) item.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], opts);
+        } else {
+          item.animate([{ opacity: 0, transform: 'scale(0.96)' }, { opacity: 1, transform: 'none' }], opts);
+        }
+      });
+    };
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () {
+        apply(b.getAttribute('data-filter'));
+      });
+    });
+  }
+
+  /** Keep Tab and Shift+Tab inside `container`. */
+  function trapFocus(e, container) {
+    if (e.key !== 'Tab') return;
+    var focusables = $$('a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]', container).filter(function (n) {
+      return n.offsetParent !== null;
+    });
+    if (!focusables.length) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  /** Hide the page from assistive tech while an overlay is open. */
+  function setPageHidden(hidden) {
+    ['#site-header', '#main', '.site-footer'].forEach(function (sel) {
+      var node = $(sel);
+      if (hidden) {
+        node.setAttribute('aria-hidden', 'true');
+        if ('inert' in node) node.inert = true;
+      } else {
+        node.removeAttribute('aria-hidden');
+        if ('inert' in node) node.inert = false;
+      }
+    });
+    root.classList.toggle('overlay-open', hidden);
+  }
+
+  var HASH_PREFIX = '#project-';
+  var modal = { open: false, slug: '', trigger: null, pushed: false, prevHash: '' };
+
+  /** Modal content is cloned from the pre-rendered card, plus the full diagram drawn here. */
+  function fillModal(item, project) {
+    var P = ui.projects;
+    var panel = $('#modal-content');
+    var card = $('.project-card', item);
+    var section = function (label, child) {
+      var wrap = document.createElement('div');
+      wrap.className = 'modal-section';
+      var h = document.createElement('h3');
+      h.className = 'mono-label';
+      h.textContent = label;
+      wrap.appendChild(h);
+      wrap.appendChild(child);
+      return wrap;
+    };
+    panel.innerHTML = '';
+
+    panel.appendChild($('.card-badges', card).cloneNode(true));
+
+    var title = document.createElement('h2');
+    title.id = 'modal-title';
+    title.className = 'modal-title';
+    title.textContent = project.title;
+    panel.appendChild(title);
+    var text = document.createElement('p');
+    text.className = 'modal-text';
+    text.textContent = project.description;
+    panel.appendChild(text);
+
+    var features = $('.card-details-body .modal-features', card);
+    if (features) panel.appendChild(section(P.features, features.cloneNode(true)));
+
+    if (project.diagram && window.Diagrams) {
+      var holder = document.createElement('div');
+      var scroller = document.createElement('div');
+      scroller.className = 'diagram-full';
+      scroller.setAttribute('tabindex', '0'); // scrollable region reachable by keyboard
+      scroller.setAttribute('role', 'region');
+      scroller.setAttribute('aria-label', fmt(P.diagramLabel, { title: project.title }));
+      scroller.innerHTML = window.Diagrams.render(project.diagram, { title: fmt(P.diagramLabel, { title: project.title }), idPrefix: 'modal-' + project.slug });
+      var hint = document.createElement('p');
+      hint.className = 'diagram-hint';
+      hint.textContent = P.diagramScroll;
+      holder.appendChild(scroller);
+      holder.appendChild(hint);
+      panel.appendChild(section(P.architecture, holder));
+    }
+
+    panel.appendChild(section(P.stack, $('.tag-list', card).cloneNode(true)));
+    var github = $('.card-details-body .modal-actions', card);
+    if (github) panel.appendChild(github.cloneNode(true));
+    $('#modal-panel').scrollTop = 0;
+  }
+
+  /**
+   * Open a project. A history entry is pushed, so the phone back button closes the modal;
+   * opening from a #project- address that is already in the history reuses that entry.
+   */
+  function openProject(slug, opts) {
+    var options = opts || {};
+    var item = document.getElementById('project-' + slug);
+    var project = DATA.projects.filter(function (p) {
+      return p.slug === slug;
+    })[0];
+    if (!item || !project) return;
+    if (modal.open) closeProject(true);
+    if (!options.fromHash) {
+      modal.prevHash = location.hash;
+      if (history.pushState) history.pushState({ project: slug }, '', HASH_PREFIX + slug);
+    }
+    modal.pushed = !!history.pushState;
+    modal.open = true;
+    modal.slug = slug;
+    modal.trigger = options.trigger || $('.card-open', item);
+    fillModal(item, project);
+    $('#project-modal').hidden = false;
+    setPageHidden(true);
+    $('#project-modal .modal-close').focus();
+  }
+
+  /** Close the modal; `fromHistory` means the address already changed (back button). */
+  function closeProject(fromHistory) {
+    if (!modal.open) return;
+    modal.open = false;
+    $('#project-modal').hidden = true;
+    setPageHidden(false);
+    if (!fromHistory && location.hash.indexOf(HASH_PREFIX) === 0) {
+      if (modal.pushed) history.back();
+      else if (history.replaceState) history.replaceState(null, '', modal.prevHash || location.pathname + location.search);
+    }
+    if (modal.trigger) modal.trigger.focus();
+    modal.trigger = null;
+  }
+
+  function initProjectModal() {
+    var overlay = $('#project-modal');
+    overlay.addEventListener('click', function (e) {
+      if (e.target.closest('[data-close]')) closeProject(false);
+    });
+    overlay.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeProject(false);
+      } else trapFocus(e, $('#modal-panel'));
+    });
+
+    // Tap or click anywhere on a card; the "View details" button is the keyboard control
+    $('#project-grid').addEventListener('click', function (e) {
+      var card = e.target.closest('.project-card');
+      if (!card || e.target.closest('a, summary')) return;
+      var item = card.parentNode;
+      openProject(item.getAttribute('data-slug'), { trigger: $('.card-open', item) });
+    });
+
+    // Address changes: back/forward buttons, typed hashes, links to #project-<slug>
+    var syncWithHash = function () {
+      var hash = location.hash;
+      if (hash.indexOf(HASH_PREFIX) === 0) {
+        var slug = decodeURIComponent(hash.slice(HASH_PREFIX.length));
+        if (!modal.open || modal.slug !== slug) openProject(slug, { fromHash: true });
+      } else if (modal.open) {
+        closeProject(true);
+      }
+    };
+    window.addEventListener('popstate', syncWithHash);
+    window.addEventListener('hashchange', syncWithHash);
+
+    // Deep link on load: put the plain page underneath, so "back" closes the modal and stays on the site
+    if (location.hash.indexOf(HASH_PREFIX) === 0 && history.pushState) {
+      var hash = location.hash;
+      history.replaceState(null, '', location.pathname + location.search);
+      history.pushState({ project: hash.slice(HASH_PREFIX.length) }, '', hash);
+      modal.prevHash = '';
+      syncWithHash();
+    }
+  }
+
+  /* =====================================================================
+   * 7. Boot
    * ===================================================================== */
   if (!hasIO) root.classList.remove('motion');
   initBootScreen();
@@ -550,4 +789,6 @@
   initCursor();
   initCardTilt();
   init3D();
+  initProjectFilters();
+  initProjectModal();
 })();

@@ -356,7 +356,10 @@
   </footer>
   <div id="project-modal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
     <div class="overlay-backdrop" data-close></div>
-    <div id="modal-panel" class="modal-panel" tabindex="-1"></div>
+    <div id="modal-panel" class="modal-panel">
+      <button type="button" class="icon-btn modal-close" data-close aria-label="Close project details"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div id="modal-content"></div>
+    </div>
   </div>
   <div id="palette" class="overlay" role="dialog" aria-modal="true" aria-label="Search and commands" hidden>
     <div class="overlay-backdrop" data-close></div>
@@ -371,6 +374,7 @@
   </div>
   <!-- build:body:end -->
   <script src="./data.js" defer></script>
+  <script src="./diagrams.js" defer></script>
   <script src="./main.js" defer></script>
 </body>
 </html>
