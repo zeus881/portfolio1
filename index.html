@@ -1,109 +1,374 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
-  <!-- ===== Meta ===== -->
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- build:head:start -->
   <title>Sanjay Kumar | Full Stack Developer &amp; UAV Systems</title>
-  <meta name="description" content="Sanjay Kumar, Full Stack Developer in Noida, India: Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software." />
-  <meta name="author" content="Sanjay Kumar" />
-  <meta name="theme-color" content="#050816" />
-  <meta name="color-scheme" content="dark" />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://zeus881.github.io/portfolio/" />
-
-  <!-- ===== Open Graph / Twitter ===== -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://zeus881.github.io/portfolio/" />
-  <meta property="og:title" content="Sanjay Kumar | Full Stack Developer &amp; UAV Systems" />
-  <meta property="og:description" content="Full Stack Developer building Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software." />
-  <meta property="og:site_name" content="Sanjay Kumar" />
-  <meta property="og:locale" content="en_IN" />
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Sanjay Kumar | Full Stack Developer &amp; UAV Systems" />
-  <meta name="twitter:description" content="Full Stack Developer building Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software." />
-
-  <!-- ===== Structured data (kept in sync with data.js by tests/smoke.mjs) ===== -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Sanjay Kumar",
-    "jobTitle": "Full Stack Developer",
-    "email": "mailto:sanjaykumarr99009@gmail.com",
-    "url": "https://zeus881.github.io/portfolio/",
-    "address": { "@type": "PostalAddress", "addressLocality": "Noida", "addressCountry": "IN" },
-    "sameAs": ["https://github.com/zeus881", "https://linkedin.com/in/sanjay-kumar-7689531b5"]
-  }
+  <meta name="description" content="Sanjay Kumar, Full Stack Developer in Noida, India: Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software.">
+  <meta name="author" content="Sanjay Kumar">
+  <meta name="theme-color" content="#050816">
+  <meta name="color-scheme" content="dark">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://zeus881.github.io/portfolio/">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050816'/%3E%3Cpath d='M10 20V10h10M44 10h10v10M54 44v10H44M20 54H10V44' fill='none' stroke='%2300D4FF' stroke-width='3'/%3E%3Ctext x='32' y='41' font-family='Arial,sans-serif' font-size='22' font-weight='700' text-anchor='middle' fill='%23E6EDF7'%3ESK%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zeus881.github.io/portfolio/">
+  <meta property="og:title" content="Sanjay Kumar | Full Stack Developer &amp; UAV Systems">
+  <meta property="og:description" content="Sanjay Kumar, Full Stack Developer in Noida, India: Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software.">
+  <meta property="og:image" content="https://zeus881.github.io/portfolio/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Sanjay Kumar, Full Stack Developer and UAV Systems, mission-control style title card">
+  <meta property="og:site_name" content="Sanjay Kumar">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sanjay Kumar | Full Stack Developer &amp; UAV Systems">
+  <meta name="twitter:description" content="Sanjay Kumar, Full Stack Developer in Noida, India: Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software.">
+  <meta name="twitter:image" content="https://zeus881.github.io/portfolio/og-image.jpg">
+  <meta name="twitter:image:alt" content="Sanjay Kumar, Full Stack Developer and UAV Systems, mission-control style title card">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Sanjay Kumar","jobTitle":"Full Stack Developer","email":"mailto:sanjaykumarr99009@gmail.com","url":"https://zeus881.github.io/portfolio/","address":{"@type":"PostalAddress","addressLocality":"Noida","addressCountry":"IN"},"sameAs":["https://github.com/zeus881","https://linkedin.com/in/sanjay-kumar-7689531b5"]}</script>
+  <!-- build:head:end -->
+  <link rel="preload" href="./fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/orbitron-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./styles.css">
+  <script>
+    /* Bootstrap before first paint: JS flag, motion flag (removed again if main.js never arrives), boot-screen skip */
+    (function () {
+      var d = document.documentElement;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var c = navigator.connection;
+      var slow = c && (c.saveData || /2g/.test(c.effectiveType || ''));
+      d.className = d.className.replace('no-js', 'js');
+      if ('IntersectionObserver' in window && !reduce) {
+        d.className += ' motion';
+        setTimeout(function () {
+          if (!window.__portfolioReady) d.className = d.className.replace(' motion', '');
+        }, 3000);
+      }
+      if (slow || reduce) d.className += ' no-boot';
+    })();
   </script>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050816'/%3E%3Cpath d='M10 20V10h10M44 10h10v10M54 44v10H44M20 54H10V44' fill='none' stroke='%2300D4FF' stroke-width='3'/%3E%3Ctext x='32' y='41' font-family='Arial,sans-serif' font-size='22' font-weight='700' text-anchor='middle' fill='%23E6EDF7'%3ESK%3C/text%3E%3C/svg%3E" />
-
-  <!-- ===== Fonts and icons ===== -->
-
-  <!-- ===== Tailwind (CDN) with the design tokens ===== -->
-
-  <!-- ===== Custom styles ===== -->
-  <link rel="stylesheet" href="styles.css" />
 </head>
-
-<body class="bg-space text-ink font-sans antialiased">
-  <!-- Boot screen: CSS hides it by 600 ms even if scripts fail -->
-  <div id="boot" class="boot" aria-hidden="true">
-    <div class="boot-mark"><span id="boot-initials"></span><span class="boot-line"></span></div>
-  </div>
-
-  <!-- Skip link (label from data.js) -->
-  <a id="skip-link" class="skip-link" href="#main"></a>
-
-  <!-- ===== Header / navigation ===== -->
+<body>
+  <!-- build:body:start -->
+  <div id="boot" class="boot" aria-hidden="true"><div class="boot-mark"><span>SK</span><span class="boot-line"></span></div></div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <noscript><p class="noscript">This page works without JavaScript; the 3D effects, filters and search need it. Resume: <a href="./Sanjay_Kumar_Resume.pdf" download>Download Resume</a>. Email: <a href="mailto:sanjaykumarr99009@gmail.com">sanjaykumarr99009@gmail.com</a></p></noscript>
   <header id="site-header" class="site-header">
     <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
     <nav class="nav-bar" aria-label="Primary">
-      <a id="nav-brand" href="#home" class="nav-brand"></a>
-      <ul id="nav-links" class="nav-links"></ul>
+      <a class="nav-brand" href="#home" aria-label="Sanjay Kumar, back to top">SK</a>
+      <ul class="nav-links"><li><a class="nav-link" href="#home">Home</a></li><li><a class="nav-link" href="#about">About</a></li><li><a class="nav-link" href="#skills">Skills</a></li><li><a class="nav-link" href="#projects">Projects</a></li><li><a class="nav-link" href="#experience">Experience</a></li><li><a class="nav-link" href="#education">Education</a></li><li><a class="nav-link" href="#contact">Contact</a></li></ul>
       <div class="nav-actions">
-        <button id="palette-open" type="button" class="icon-btn kbd-btn"><kbd>/</kbd></button>
-        <button id="toggle-3d" type="button" class="pill-btn toggle-3d" aria-pressed="true"></button>
-        <a id="nav-resume" class="btn btn-outline nav-resume" download></a>
-        <button id="nav-toggle" type="button" class="icon-btn nav-toggle" aria-expanded="false" aria-controls="mobile-sheet">
-          <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
-        </button>
+        <button id="palette-open" type="button" class="icon-btn js-only" aria-label="Open search and commands" aria-haspopup="dialog"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+        <button id="toggle-3d" type="button" class="pill-btn toggle-3d js-only" aria-pressed="false" aria-label="Toggle 3D effects">3D off</button>
+        <a class="btn btn-outline nav-resume" href="./Sanjay_Kumar_Resume.pdf" download>Download Resume</a>
+        <button id="nav-toggle" type="button" class="icon-btn nav-toggle js-only" aria-expanded="false" aria-controls="mobile-sheet" aria-label="Open menu"><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span></button>
       </div>
     </nav>
-    <!-- Mobile sheet -->
     <div id="mobile-sheet" class="mobile-sheet" hidden>
-      <ul id="mobile-links" class="mobile-links"></ul>
+      <ul class="mobile-links"><li><a class="nav-link" href="#home">Home</a></li><li><a class="nav-link" href="#about">About</a></li><li><a class="nav-link" href="#skills">Skills</a></li><li><a class="nav-link" href="#projects">Projects</a></li><li><a class="nav-link" href="#experience">Experience</a></li><li><a class="nav-link" href="#education">Education</a></li><li><a class="nav-link" href="#contact">Contact</a></li><li><button type="button" class="nav-link" data-open-palette><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>&nbsp;&nbsp;Search</button></li><li><a class="btn btn-outline" href="./Sanjay_Kumar_Resume.pdf" download>Download Resume</a></li></ul>
     </div>
   </header>
-
-  <!-- ===== Main: seven sections, filled by main.js ===== -->
   <main id="main" tabindex="-1">
-    <section id="home" class="section section-hero" data-accent="cyan" aria-label="Introduction"></section>
-    <section id="about" class="section" data-accent="cyan" aria-labelledby="about-title"></section>
-    <section id="skills" class="section" data-accent="purple" aria-labelledby="skills-title"></section>
-    <section id="projects" class="section" data-accent="cyan" aria-labelledby="projects-title"></section>
-    <section id="experience" class="section" data-accent="purple" aria-labelledby="experience-title"></section>
-    <section id="education" class="section" data-accent="purple" aria-labelledby="education-title"></section>
-    <section id="contact" class="section" data-accent="teal" aria-labelledby="contact-title"></section>
+    <section id="home" class="section section-hero" data-accent="cyan" aria-label="Introduction">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="status-strip reveal"><span class="status-dot" aria-hidden="true"></span><span>Available for opportunities</span><span class="status-time js-only"><span aria-hidden="true">/ </span><span class="sr-only">Local time: </span><time id="local-time">IST</time></span></p>
+          <p class="hero-greeting mono-label reveal">Hi, I&#39;m</p>
+          <h1 class="hero-name reveal">Sanjay Kumar</h1>
+          <p class="hero-roles reveal"><span id="typed-role">Full Stack Developer | Backend &amp; APIs | UAV Systems &amp; Autonomy | Real-Time Web &amp; 3D</span><span class="typed-caret" aria-hidden="true"></span></p>
+          <p class="meta-line reveal"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Noida, India</span></p>
+          <div class="hero-actions row reveal">
+            <a class="btn btn-primary" href="#projects">View Projects</a>
+            <a class="btn btn-outline" href="./Sanjay_Kumar_Resume.pdf" download><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download Resume</a>
+            <a class="btn btn-ghost" href="#contact">Contact</a>
+          </div>
+        </div>
+        <div class="hero-visual hud reveal" aria-hidden="true"><div id="hero-3d" class="hero-canvas"></div></div>
+      </div>
+      <a class="scroll-hint" href="#about"><span class="mono-label">Scroll</span><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+    </section>
+    <section id="about" class="section" data-accent="cyan" aria-labelledby="about-title">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="mono-label" aria-hidden="true">// 01 ABOUT</p>
+          <h2 id="about-title" class="section-title">About Me</h2>
+        </header>
+        <div class="about-grid">
+          <div class="glass about-bio reveal"><p>Full Stack Developer with 2+ years building Python-based services, REST APIs, event-driven systems and the web interfaces that sit on top of them. Designs containerized microservices with Docker and Kubernetes, works with SQL and DynamoDB, and uses MQTT to synchronize 100+ connected devices in real time. Focused on correctness, performance and reliability.</p></div>
+          <ul class="counter-grid">
+            <li class="glass counter-card reveal" style="--i:0"><span class="counter-value" aria-hidden="true"><span class="counter" data-target="2">2</span>+</span><span class="sr-only">2+</span><span class="counter-label">Years of experience</span></li>
+            <li class="glass counter-card reveal" style="--i:1"><span class="counter-value" aria-hidden="true"><span class="counter" data-target="100">100</span>+</span><span class="sr-only">100+</span><span class="counter-label">Devices synchronized in real time</span></li>
+            <li class="glass counter-card reveal" style="--i:2"><span class="counter-value" aria-hidden="true">&lt;<span class="counter" data-target="200">200</span> ms</span><span class="sr-only">&lt;200 ms</span><span class="counter-label">Video pipeline latency</span></li>
+            <li class="glass counter-card reveal" style="--i:3"><span class="counter-value" aria-hidden="true"><span class="counter" data-target="30">30</span>%</span><span class="sr-only">30%</span><span class="counter-label">Improvement in targeting accuracy</span></li>
+          </ul>
+        </div>
+        <h3 class="sub-heading mono-label reveal">What I do</h3>
+        <ul class="what-grid">
+          <li class="glass what-card reveal" style="--i:0"><span class="icon-tile"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M10 9l-2 2 2 2M14 9l2 2-2 2"/></svg></span><h4 class="card-title">Frontend &amp; 3D Web</h4><p class="card-text">Web interfaces in HTML, CSS, JavaScript and TypeScript, with Tailwind CSS and Three.js for interactive 3D.</p></li>
+          <li class="glass what-card reveal" style="--i:1"><span class="icon-tile"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6M13.5 4l-3 16"/></svg></span><h4 class="card-title">Backend &amp; APIs</h4><p class="card-text">REST and GraphQL APIs, event-driven services and containerized microservices in Python and Elixir, secured with OAuth2/RBAC via Keycloak.</p></li>
+          <li class="glass what-card reveal" style="--i:2"><span class="icon-tile"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M7 7l3 3M17 7l-3 3M7 17l3-3M17 17l-3-3"/><rect x="10" y="10" width="4" height="4" rx="1"/></svg></span><h4 class="card-title">UAV &amp; Real-Time Systems</h4><p class="card-text">MAVLink/PX4 telemetry for a custom Ground Control Station, a sub-200 ms GStreamer/WebRTC video pipeline and MQTT sync for 100+ devices.</p></li>
+        </ul>
+      </div>
+    </section>
+    <section id="skills" class="section" data-accent="purple" aria-labelledby="skills-title">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="mono-label" aria-hidden="true">// 02 SKILLS</p>
+          <h2 id="skills-title" class="section-title">Skills</h2>
+        </header>
+        <div class="skills-grid">
+          <article class="glass skill-group reveal"><h3 class="card-title">Languages</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>Python (primary)</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>C++</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>JavaScript</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>TypeScript</li><li class="chip" style="--i:4"><span class="chip-dot" aria-hidden="true"></span>Elixir</li><li class="chip" style="--i:5"><span class="chip-dot" aria-hidden="true"></span>SQL</li><li class="chip" style="--i:6"><span class="chip-dot" aria-hidden="true"></span>HTML</li><li class="chip" style="--i:7"><span class="chip-dot" aria-hidden="true"></span>CSS</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Frontend</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>HTML</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>CSS</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>JavaScript</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>TypeScript</li><li class="chip" style="--i:4"><span class="chip-dot" aria-hidden="true"></span>Tailwind CSS</li><li class="chip" style="--i:5"><span class="chip-dot" aria-hidden="true"></span>Three.js</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Backend &amp; APIs</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>REST</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>GraphQL</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>FastAPI</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>Microservices</li><li class="chip" style="--i:4"><span class="chip-dot" aria-hidden="true"></span>Event-Driven Architecture</li><li class="chip" style="--i:5"><span class="chip-dot" aria-hidden="true"></span>OAuth2/RBAC (Keycloak)</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Messaging &amp; Real-Time</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>MQTT</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>WebRTC</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>Device synchronization</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>Telemetry</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Cloud &amp; DevOps</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>AWS (EC2, Lambda, S3, DynamoDB, API Gateway, IAM)</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>Docker</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>Podman</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>Kubernetes</li><li class="chip" style="--i:4"><span class="chip-dot" aria-hidden="true"></span>Git</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Automation &amp; CI/CD</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>GitHub Actions</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>CI/CD pipelines</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>Python scripting</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>AWS Lambda automation</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Databases</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>SQL</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>DynamoDB</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Performance &amp; Reliability</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>Latency profiling</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>Logging</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>Log and telemetry analysis</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>Anomaly detection</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Applied AI/ML</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>PyTorch</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>YOLOv8</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>OpenCV</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>LangChain</li><li class="chip" style="--i:4"><span class="chip-dot" aria-hidden="true"></span>RAG</li><li class="chip" style="--i:5"><span class="chip-dot" aria-hidden="true"></span>NLP</li></ul></article>
+          <article class="glass skill-group reveal"><h3 class="card-title">Practices</h3><ul class="chip-list"><li class="chip" style="--i:0"><span class="chip-dot" aria-hidden="true"></span>Agile/Scrum</li><li class="chip" style="--i:1"><span class="chip-dot" aria-hidden="true"></span>Jira</li><li class="chip" style="--i:2"><span class="chip-dot" aria-hidden="true"></span>Unit Testing</li><li class="chip" style="--i:3"><span class="chip-dot" aria-hidden="true"></span>Technical Documentation</li><li class="chip" style="--i:4"><span class="chip-dot" aria-hidden="true"></span>Linux</li></ul></article>
+        </div>
+      </div>
+    </section>
+    <section id="projects" class="section" data-accent="cyan" aria-labelledby="projects-title">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="mono-label" aria-hidden="true">// 03 PROJECTS</p>
+          <h2 id="projects-title" class="section-title">Projects</h2>
+        </header>
+        <div class="filter-bar reveal" role="group" aria-label="Filter projects by category"><button type="button" class="filter-btn" data-filter="All" aria-pressed="true">All<span class="filter-count">9</span></button><button type="button" class="filter-btn" data-filter="Drones" aria-pressed="false">Drones<span class="filter-count">2</span></button><button type="button" class="filter-btn" data-filter="Backend" aria-pressed="false">Backend<span class="filter-count">2</span></button><button type="button" class="filter-btn" data-filter="AI" aria-pressed="false">AI<span class="filter-count">2</span></button><button type="button" class="filter-btn" data-filter="Web" aria-pressed="false">Web<span class="filter-count">3</span></button></div>
+        <p id="project-status" class="sr-only" role="status" aria-live="polite"></p>
+        <div id="project-grid" class="project-grid" data-filter="All">
+          <div id="project-gandiv-gcs" class="project-item reveal is-featured" data-category="Drones" data-slug="gandiv-gcs">
+            <article class="project-card glass hud">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Drones</span><span class="badge badge-featured">Featured</span></div>
+              <h3 class="card-title project-title">GANDIV GCS</h3>
+              <p class="card-text">Ground control system for 50+ ArduPilot vehicles over MAVLink 2.0, with signed links, role-based access, a two-person rule and a live CesiumJS 3D map.</p>
+              <div class="diagram-preview" aria-hidden="true"><svg viewBox="0 0 1032 430" class="diagram diagram--compact" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><defs><marker id="gandiv-gcs-c-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="dg-arrowhead"/></marker></defs><rect class="dg-group" rx="14" x="618" y="24" width="196" height="386"/><text class="dg-group-label" x="630" y="39">SERVICES</text><line class="dg-edge" x1="210.0" y1="224.0" x2="222.0" y2="224.0" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="210.0" y1="224.0" x2="222.0" y2="224.0"/><line class="dg-edge" x1="410.0" y1="224.0" x2="422.0" y2="224.0" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="410.0" y1="224.0" x2="422.0" y2="224.0"/><line class="dg-edge" x1="552.4" y1="196.4" x2="679.6" y2="99.6" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="552.4" y1="196.4" x2="679.6" y2="99.6"/><line class="dg-edge" x1="584.8" y1="197.9" x2="647.2" y2="174.1" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="584.8" y1="197.9" x2="647.2" y2="174.1"/><line class="dg-edge" x1="610.0" y1="224.0" x2="622.0" y2="224.0" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="610.0" y1="224.0" x2="622.0" y2="224.0"/><line class="dg-edge" x1="584.8" y1="250.1" x2="647.2" y2="273.9" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="584.8" y1="250.1" x2="647.2" y2="273.9"/><line class="dg-edge" x1="552.4" y1="251.6" x2="679.6" y2="348.4" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="552.4" y1="251.6" x2="679.6" y2="348.4"/><line class="dg-edge" x1="816.8" y1="182.2" x2="840.8" y2="174.0" marker-end="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="816.8" y1="182.2" x2="840.8" y2="174.0"/><line class="dg-edge" x1="810.0" y1="376.0" x2="822.0" y2="376.0" marker-end="url(#gandiv-gcs-c-arrow)" marker-start="url(#gandiv-gcs-c-arrow)"/><line class="dg-flow" x1="810.0" y1="376.0" x2="822.0" y2="376.0"/><g class="dg-node dg-node--external"><rect rx="10" x="28" y="200" width="176" height="48"/><text class="dg-label"><tspan x="116" y="229">Vehicles</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="228" y="200" width="176" height="48"/><text class="dg-label"><tspan x="316" y="229">mavlink-core</tspan></text></g><g class="dg-node dg-node--bus"><rect rx="10" x="428" y="200" width="176" height="48"/><text class="dg-label"><tspan x="516" y="229">NATS</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="48" width="176" height="48"/><text class="dg-label"><tspan x="716" y="77">vehicle-manager</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="124" width="176" height="48"/><text class="dg-label"><tspan x="716" y="153">mission-service</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="200" width="176" height="48"/><text class="dg-label"><tspan x="716" y="229">telemetry-recorder</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="276" width="176" height="48"/><text class="dg-label"><tspan x="716" y="305">swarm-engine</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="352" width="176" height="48"/><text class="dg-label"><tspan x="716" y="381">api-gateway</tspan></text></g><g class="dg-node dg-node--store"><rect rx="10" x="828" y="124" width="176" height="48"/><text class="dg-label"><tspan x="916" y="144.5">PostgreSQL +</tspan><tspan x="916" y="161.5">TimescaleDB</tspan></text></g><g class="dg-node dg-node--client"><rect rx="10" x="828" y="352" width="176" height="48"/><text class="dg-label"><tspan x="916" y="372.5">React + CesiumJS</tspan><tspan x="916" y="389.5">console</tspan></text></g></svg></div>
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Rust</li><li class="tag">Go</li><li class="tag">React</li><li class="tag">CesiumJS</li><li class="tag">NATS</li><li class="tag">TimescaleDB</li></ul>
+              <button type="button" class="card-open js-only" data-project="gandiv-gcs" aria-haspopup="dialog">View details<span class="sr-only">: GANDIV GCS</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><ul class="modal-features"><li>Six backend services over NATS</li><li>MAVLink 2 signing with per-vehicle keys</li><li>Link failover</li><li>Five operator roles</li><li>Missions, geofences and swarm formations</li><li>TimescaleDB telemetry history and replay</li></ul></div></details>
+            </article>
+          </div>
+          <div id="project-drone-swarm-simulator" class="project-item reveal is-featured" data-category="Drones" data-slug="drone-swarm-simulator">
+            <article class="project-card glass hud">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Drones</span><span class="badge badge-featured">Featured</span></div>
+              <h3 class="card-title project-title">Drone Swarm Simulator</h3>
+              <p class="card-text">Simulates up to 50 drones at 30 Hz with ORCA collision avoidance, formations, mission planning, replay and a browser 3D ground station.</p>
+              <div class="diagram-preview" aria-hidden="true"><svg viewBox="0 0 832 354" class="diagram diagram--compact" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><defs><marker id="drone-swarm-simulator-c-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="dg-arrowhead"/></marker></defs><line class="dg-edge" x1="210.0" y1="148.0" x2="222.0" y2="148.0" marker-end="url(#drone-swarm-simulator-c-arrow)" marker-start="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="210.0" y1="148.0" x2="222.0" y2="148.0"/><line class="dg-edge" x1="410.0" y1="148.0" x2="422.0" y2="148.0" marker-end="url(#drone-swarm-simulator-c-arrow)" marker-start="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="410.0" y1="148.0" x2="422.0" y2="148.0"/><line class="dg-edge" x1="650.0" y1="97.1" x2="584.8" y2="121.9" marker-end="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="650.0" y1="97.1" x2="584.8" y2="121.9"/><line class="dg-edge" x1="625.0" y1="148.0" x2="610.0" y2="148.0" marker-end="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="625.0" y1="148.0" x2="610.0" y2="148.0"/><line class="dg-edge" x1="650.0" y1="198.9" x2="584.8" y2="174.1" marker-end="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="650.0" y1="198.9" x2="584.8" y2="174.1"/><line class="dg-edge" x1="482.0" y1="173.8" x2="352.4" y2="272.4" marker-end="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="482.0" y1="173.8" x2="352.4" y2="272.4"/><line class="dg-edge" x1="225.0" y1="300.0" x2="210.0" y2="300.0" marker-end="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="225.0" y1="300.0" x2="210.0" y2="300.0"/><line class="dg-edge" x1="516.0" y1="178.0" x2="516.0" y2="270.0" marker-end="url(#drone-swarm-simulator-c-arrow)" marker-start="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="516.0" y1="178.0" x2="516.0" y2="270.0"/><line class="dg-edge" x1="610.0" y1="300.0" x2="622.0" y2="300.0" marker-end="url(#drone-swarm-simulator-c-arrow)" marker-start="url(#drone-swarm-simulator-c-arrow)"/><line class="dg-flow" x1="610.0" y1="300.0" x2="622.0" y2="300.0"/><g class="dg-node dg-node--client"><rect rx="10" x="28" y="124" width="176" height="48"/><text class="dg-label"><tspan x="116" y="153">Browser GCS</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="228" y="124" width="176" height="48"/><text class="dg-label"><tspan x="316" y="153">FastAPI</tspan></text></g><g class="dg-node dg-node--bus"><rect rx="10" x="428" y="124" width="176" height="48"/><text class="dg-label"><tspan x="516" y="153">Simulation engine</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="48" width="176" height="48"/><text class="dg-label"><tspan x="716" y="77">Algorithms</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="124" width="176" height="48"/><text class="dg-label"><tspan x="716" y="153">Missions</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="628" y="200" width="176" height="48"/><text class="dg-label"><tspan x="716" y="229">Kalman estimation</tspan></text></g><g class="dg-node dg-node--client"><rect rx="10" x="28" y="276" width="176" height="48"/><text class="dg-label"><tspan x="116" y="296.5">Replay and</tspan><tspan x="116" y="313.5">reports</tspan></text></g><g class="dg-node dg-node--store"><rect rx="10" x="228" y="276" width="176" height="48"/><text class="dg-label"><tspan x="316" y="305">Recorder</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="428" y="276" width="176" height="48"/><text class="dg-label"><tspan x="516" y="305">MAVLink adapters</tspan></text></g><g class="dg-node dg-node--external"><rect rx="10" x="628" y="276" width="176" height="48"/><text class="dg-label"><tspan x="716" y="305">SITL vehicles</tspan></text></g></svg></div>
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">NumPy</li><li class="tag">FastAPI</li><li class="tag">Three.js</li><li class="tag">MAVLink</li></ul>
+              <button type="button" class="card-open js-only" data-project="drone-swarm-simulator" aria-haspopup="dialog">View details<span class="sr-only">: Drone Swarm Simulator</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><ul class="modal-features"><li>ORCA with potential-field fallback and a hard 4 m separation floor</li><li>Eight formations with Hungarian slot assignment</li><li>A* and RRT* routing</li><li>Kalman filter per drone</li><li>MAVLink and MAVSDK adapters for SITL vehicles</li><li>203 automated tests</li></ul><p class="modal-actions"><a class="btn btn-ghost" href="https://github.com/zeus881/swarm-simualation" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></p></div></details>
+            </article>
+          </div>
+          <div id="project-retail-automation-system" class="project-item reveal is-featured" data-category="Backend" data-slug="retail-automation-system">
+            <article class="project-card glass hud">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Backend</span><span class="badge badge-featured">Featured</span></div>
+              <h3 class="card-title project-title">Real-Time Retail Automation System</h3>
+              <p class="card-text">Real-time IoT backend in Elixir/Phoenix that syncs 100+ devices over MQTT, with Docker deployments, Kubernetes orchestration and Keycloak auth.</p>
+              <div class="diagram-preview" aria-hidden="true"><svg viewBox="0 0 1032 126" class="diagram diagram--compact" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><defs><marker id="retail-automation-system-c-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="dg-arrowhead"/></marker></defs><rect class="dg-group" rx="14" x="418" y="24" width="196" height="82"/><text class="dg-group-label" x="430" y="39">DOCKER / KUBERNETES</text><line class="dg-edge" x1="207.0" y1="72.0" x2="222.0" y2="72.0" marker-end="url(#retail-automation-system-c-arrow)"/><line class="dg-flow" x1="207.0" y1="72.0" x2="222.0" y2="72.0"/><line class="dg-edge" x1="407.0" y1="72.0" x2="422.0" y2="72.0" marker-end="url(#retail-automation-system-c-arrow)"/><line class="dg-flow" x1="407.0" y1="72.0" x2="422.0" y2="72.0"/><line class="dg-edge" x1="610.0" y1="72.0" x2="622.0" y2="72.0" marker-end="url(#retail-automation-system-c-arrow)" marker-start="url(#retail-automation-system-c-arrow)"/><line class="dg-flow" x1="610.0" y1="72.0" x2="622.0" y2="72.0"/><line class="dg-edge" x1="810.0" y1="72.0" x2="822.0" y2="72.0" marker-end="url(#retail-automation-system-c-arrow)" marker-start="url(#retail-automation-system-c-arrow)"/><line class="dg-flow" x1="810.0" y1="72.0" x2="822.0" y2="72.0"/><g class="dg-node dg-node--client"><rect rx="10" x="28" y="48" width="176" height="48"/><text class="dg-label"><tspan x="116" y="77">Client apps</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="228" y="48" width="176" height="48"/><text class="dg-label"><tspan x="316" y="77">Keycloak</tspan></text></g><g class="dg-node dg-node--service"><rect rx="10" x="428" y="48" width="176" height="48"/><text class="dg-label"><tspan x="516" y="77">Phoenix backend</tspan></text></g><g class="dg-node dg-node--bus"><rect rx="10" x="628" y="48" width="176" height="48"/><text class="dg-label"><tspan x="716" y="77">MQTT broker</tspan></text></g><g class="dg-node dg-node--external"><rect rx="10" x="828" y="48" width="176" height="48"/><text class="dg-label"><tspan x="916" y="77">100+ devices</tspan></text></g></svg></div>
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Elixir</li><li class="tag">Phoenix</li><li class="tag">MQTT</li><li class="tag">Docker</li><li class="tag">Kubernetes</li><li class="tag">Keycloak</li></ul>
+              <button type="button" class="card-open js-only" data-project="retail-automation-system" aria-haspopup="dialog">View details<span class="sr-only">: Real-Time Retail Automation System</span>&nbsp;→</button>
+              
+            </article>
+          </div>
+          <div id="project-aastha-ai-assistant" class="project-item reveal" data-category="AI" data-slug="aastha-ai-assistant">
+            <article class="project-card glass">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">AI</span></div>
+              <h3 class="card-title project-title">Aastha, Local AI Desktop Assistant</h3>
+              <p class="card-text">Fully offline, voice-activated desktop assistant in Python with a tool-dispatcher architecture, self-healing execution layer and long-term semantic memory in ChromaDB.</p>
+              
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">ChromaDB</li><li class="tag">Voice</li><li class="tag">Local LLM</li></ul>
+              <button type="button" class="card-open js-only" data-project="aastha-ai-assistant" aria-haspopup="dialog">View details<span class="sr-only">: Aastha, Local AI Desktop Assistant</span>&nbsp;→</button>
+              
+            </article>
+          </div>
+          <div id="project-ai-client-ranking" class="project-item reveal" data-category="AI" data-slug="ai-client-ranking">
+            <article class="project-card glass">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">AI</span></div>
+              <h3 class="card-title project-title">AI Client Ranking System</h3>
+              <p class="card-text">Crawls company websites, extracts product and technology signals with a local LLM and ranks leads; falls back to keywords when the LLM is unavailable.</p>
+              
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">Ollama</li><li class="tag">Flask</li><li class="tag">scikit-learn</li></ul>
+              <button type="button" class="card-open js-only" data-project="ai-client-ranking" aria-haspopup="dialog">View details<span class="sr-only">: AI Client Ranking System</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><p class="modal-actions"><a class="btn btn-ghost" href="https://github.com/zeus881/clinet-ranking-system-LLM" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></p></div></details>
+            </article>
+          </div>
+          <div id="project-shop-in" class="project-item reveal" data-category="Web" data-slug="shop-in">
+            <article class="project-card glass">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Web</span></div>
+              <h3 class="card-title project-title">Shop-In</h3>
+              <p class="card-text">Django online store with catalogue, search, cart, Paytm checkout and order tracking.</p>
+              
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Django</li><li class="tag">SQLite</li><li class="tag">Paytm</li></ul>
+              <button type="button" class="card-open js-only" data-project="shop-in" aria-haspopup="dialog">View details<span class="sr-only">: Shop-In</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><p class="modal-actions"><a class="btn btn-ghost" href="https://github.com/zeus881/shop-in" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></p></div></details>
+            </article>
+          </div>
+          <div id="project-weather-forecast-app" class="project-item reveal" data-category="Web" data-slug="weather-forecast-app">
+            <article class="project-card glass">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Web</span></div>
+              <h3 class="card-title project-title">Weather Forecast App</h3>
+              <p class="card-text">Current conditions and 5-day forecast by city or GPS location.</p>
+              
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">JavaScript</li><li class="tag">Tailwind</li><li class="tag">OpenWeather</li></ul>
+              <button type="button" class="card-open js-only" data-project="weather-forecast-app" aria-haspopup="dialog">View details<span class="sr-only">: Weather Forecast App</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><p class="modal-actions"><a class="btn btn-ghost" href="https://github.com/zeus881/Weather-app-real" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></p></div></details>
+            </article>
+          </div>
+          <div id="project-tech-traveler" class="project-item reveal" data-category="Web" data-slug="tech-traveler">
+            <article class="project-card glass">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Web</span></div>
+              <h3 class="card-title project-title">Tech-Traveler</h3>
+              <p class="card-text">Eight-page animated content site on travel technology.</p>
+              
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">HTML</li><li class="tag">Tailwind</li><li class="tag">GSAP</li><li class="tag">Three.js</li></ul>
+              <button type="button" class="card-open js-only" data-project="tech-traveler" aria-haspopup="dialog">View details<span class="sr-only">: Tech-Traveler</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><p class="modal-actions"><a class="btn btn-ghost" href="https://github.com/zeus881/Tech-Traveler" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></p></div></details>
+            </article>
+          </div>
+          <div id="project-tcp-chat" class="project-item reveal" data-category="Backend" data-slug="tcp-chat">
+            <article class="project-card glass">
+              <span class="card-light" aria-hidden="true"></span>
+              <div class="card-badges row-tight row"><span class="badge">Backend</span></div>
+              <h3 class="card-title project-title">TCP Chat</h3>
+              <p class="card-text">Threaded client-server chat on raw TCP sockets.</p>
+              
+              <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">sockets</li><li class="tag">threading</li></ul>
+              <button type="button" class="card-open js-only" data-project="tcp-chat" aria-haspopup="dialog">View details<span class="sr-only">: TCP Chat</span>&nbsp;→</button>
+              <details class="card-details"><summary>View details</summary><div class="card-details-body"><p class="modal-actions"><a class="btn btn-ghost" href="https://github.com/zeus881/server-and-clinet" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></p></div></details>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="experience" class="section" data-accent="purple" aria-labelledby="experience-title">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="mono-label" aria-hidden="true">// 04 EXPERIENCE</p>
+          <h2 id="experience-title" class="section-title">Experience</h2>
+        </header>
+        <div class="timeline">
+          <div class="timeline-track" aria-hidden="true"><div class="timeline-progress"></div></div>
+          <ol class="timeline-list">
+            <li class="timeline-item reveal is-current">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <article class="glass timeline-card">
+                <div class="timeline-head"><h3 class="card-title">Software Engineer, UAV Systems &amp; Autonomy</h3><p class="timeline-date mono-label"><span class="now-badge">NOW</span>May 2026 – Present</p></div>
+                <p class="timeline-company">Gandiv AI and Defence System Pvt. Ltd. · Noida</p>
+                <ul class="timeline-points"><li>Builds real-time backend services and data pipelines, including a GStreamer/WebRTC video pipeline optimized for sub-200 ms latency.</li><li>Integrates MAVLink/PX4 telemetry into a custom Ground Control Station, validated end to end in simulation.</li><li>Analyzes logs and telemetry to detect anomalies and find performance gains.</li><li>Contributes to distributed, multi-node coordination logic.</li></ul>
+                <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">MAVLink</li><li class="tag">PX4</li><li class="tag">GStreamer</li><li class="tag">WebRTC</li></ul>
+              </article>
+            </li>
+            <li class="timeline-item reveal">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <article class="glass timeline-card">
+                <div class="timeline-head"><h3 class="card-title">Software Engineer, Backend &amp; Integrations</h3><p class="timeline-date mono-label">Feb 2026 – May 2026</p></div>
+                <p class="timeline-company">Rebhu Computing Pvt. Ltd. · Greater Noida</p>
+                <ul class="timeline-points"><li>Built containerized backend services with Docker and Podman; OAuth2/RBAC via Keycloak across microservices.</li><li>Developed REST APIs and event-driven services in Python and Elixir/Phoenix, syncing 100+ devices via MQTT.</li><li>Integrated LLM-based automation into a Python application, improving targeting accuracy by 30%.</li></ul>
+                <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">Elixir</li><li class="tag">Phoenix</li><li class="tag">MQTT</li><li class="tag">Docker</li><li class="tag">Keycloak</li></ul>
+              </article>
+            </li>
+            <li class="timeline-item reveal">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <article class="glass timeline-card">
+                <div class="timeline-head"><h3 class="card-title">Junior Engineer, Project Coordinator (Python &amp; AWS Automation)</h3><p class="timeline-date mono-label">Jan 2025 – Feb 2026</p></div>
+                <p class="timeline-company">Yottec System LLP · Bengaluru</p>
+                <ul class="timeline-points"><li>Delivered Python automation tools and AWS Lambda/EC2 pipelines for defence-grade software projects.</li><li>Built RESTful APIs integrated with S3, DynamoDB, API Gateway and IAM.</li><li>Led Agile/Scrum ceremonies and improved CI/CD pipelines with GitHub Actions.</li></ul>
+                <ul class="tag-list" aria-label="Tech stack"><li class="tag">Python</li><li class="tag">AWS</li><li class="tag">GitHub Actions</li><li class="tag">Agile</li></ul>
+              </article>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+    <section id="education" class="section" data-accent="purple" aria-labelledby="education-title">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="mono-label" aria-hidden="true">// 05 EDUCATION</p>
+          <h2 id="education-title" class="section-title">Education &amp; Certifications</h2>
+        </header>
+        <div class="edu-grid">
+          <div class="reveal">
+            <h3 class="sub-heading mono-label">Degree</h3>
+            <article class="glass degree-card"><span class="icon-tile"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 9 12 4l10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span><div><h4 class="card-title">B.Tech, Computer Science &amp; Engineering</h4><p class="card-text">Shambhunath Institute of Engineering and Technology, Prayagraj</p><p class="mono-label" style="margin-top:8px">2021 to 2024</p></div></article>
+          </div>
+          <div class="reveal">
+            <h3 class="sub-heading mono-label">Certifications</h3>
+            <ul class="cert-list"><li class="cert-chip"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg><span><span class="cert-title">Full Stack Web Development</span><span class="cert-issuer">Internshala</span></span></li><li class="cert-chip"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg><span><span class="cert-title">Python Programming</span><span class="cert-issuer">Mapping Skills Institute</span></span></li><li class="cert-chip"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg><span><span class="cert-title">AWS Cloud Computing</span><span class="cert-issuer">IIIT Institute</span></span></li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="contact" class="section" data-accent="teal" aria-labelledby="contact-title">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="mono-label" aria-hidden="true">// 06 CONTACT</p>
+          <h2 id="contact-title" class="section-title">Get In Touch</h2>
+        </header>
+        <div class="contact-grid">
+          <div class="reveal">
+            <h3 class="sub-heading mono-label">Reach me directly</h3>
+            <div class="glass contact-card">
+              <span class="icon-tile"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+              <a class="contact-email" href="mailto:sanjaykumarr99009@gmail.com">sanjaykumarr99009<wbr>@gmail.com</a>
+              <button type="button" id="copy-email" class="pill-btn copy-btn js-only"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span class="copy-label">Copy email</span></button>
+            </div>
+            <div class="contact-links row">
+              <a class="btn btn-ghost" href="https://github.com/zeus881" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub<span class="sr-only"> (opens in a new tab)</span></a>
+              <a class="btn btn-ghost" href="https://linkedin.com/in/sanjay-kumar-7689531b5" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4v11H3zM9.5 9.75h3.83v1.5h.05c.53-1 1.84-2.06 3.79-2.06 4.05 0 4.8 2.67 4.8 6.13v6.43h-4v-5.7c0-1.36-.03-3.1-1.89-3.1-1.9 0-2.18 1.48-2.18 3v5.8h-4z"/></svg>LinkedIn<span class="sr-only"> (opens in a new tab)</span></a>
+            </div>
+            <p class="meta-line"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Noida, India</span></p>
+          </div>
+          <div class="reveal">
+            <h3 class="sub-heading mono-label">Send a message</h3>
+            <form id="contact-form" class="glass contact-form" action="mailto:sanjaykumarr99009@gmail.com" method="post" enctype="text/plain">
+              <div class="field-row"><div class="field"><label class="field-label" for="cf-name">Name</label><input id="cf-name" name="name" type="text" class="field-input" required autocomplete="name" aria-describedby="cf-name-err" autocapitalize="words"><p id="cf-name-err" class="field-error"></p></div><div class="field"><label class="field-label" for="cf-email">Email</label><input id="cf-email" name="email" type="email" class="field-input" required autocomplete="email" aria-describedby="cf-email-err" inputmode="email" autocapitalize="off" spellcheck="false"><p id="cf-email-err" class="field-error"></p></div></div>
+              <div class="field"><label class="field-label" for="cf-subject">Subject</label><input id="cf-subject" name="subject" type="text" class="field-input" required autocomplete="off" aria-describedby="cf-subject-err"><p id="cf-subject-err" class="field-error"></p></div>
+              <div class="field"><label class="field-label" for="cf-message">Message</label><textarea id="cf-message" name="message" class="field-input" rows="6" required aria-describedby="cf-message-err"></textarea><p id="cf-message-err" class="field-error"></p></div>
+              <div class="hp-field" aria-hidden="true"><label>Leave empty<input type="text" name="_honey" tabindex="-1" autocomplete="off"></label></div>
+              <div><button type="submit" id="cf-submit" class="btn btn-primary"><span class="spinner" hidden aria-hidden="true"></span><span class="btn-label">Send Message</span></button></div>
+              <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
-
-  <!-- ===== Project details modal (filled by main.js) ===== -->
-  <dialog id="project-modal" class="modal" aria-labelledby="modal-title">
-    <div id="modal-panel" class="modal-panel glass"></div>
-  </dialog>
-
-  <!-- ===== Footer ===== -->
   <footer class="site-footer">
-    <div id="footer-inner" class="container-x footer-inner"></div>
+    <div class="container footer-inner">
+      <p>© <span id="footer-year">2026</span> Sanjay Kumar</p>
+      <a class="icon-btn" href="#home" aria-label="Back to top"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 19V5M5 12l7-7 7 7"/></svg></a>
+    </div>
   </footer>
-
-  <!-- ===== Scripts (classic, deferred; work from file:// too) ===== -->
-  <script src="./vendor/three.min.js" defer></script>
-  <script src="data.js" defer></script>
-  <script src="diagrams.js" defer></script>
-  <script src="main.js" defer></script>
-  <script src="palette.js" defer></script>
-  <script src="bg-3d.js" defer></script>
-  <script src="hero-3d.js" defer></script>
+  <div id="project-modal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="overlay-backdrop" data-close></div>
+    <div id="modal-panel" class="modal-panel" tabindex="-1"></div>
+  </div>
+  <div id="palette" class="overlay" role="dialog" aria-modal="true" aria-label="Search and commands" hidden>
+    <div class="overlay-backdrop" data-close></div>
+    <div class="palette-panel">
+      <div class="palette-head">
+        <input id="palette-input" class="palette-input" type="text" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" aria-label="Search sections, projects and actions" placeholder="Search sections, projects and actions" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+        <button type="button" class="icon-btn" data-close aria-label="Close search"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <ul id="palette-list" class="palette-list" role="listbox" aria-label="Search and commands"></ul>
+      <p class="palette-hint mono-label">Arrow keys to move, Enter to run, Esc to close</p>
+    </div>
+  </div>
+  <!-- build:body:end -->
 </body>
 </html>

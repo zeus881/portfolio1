@@ -388,7 +388,7 @@
       searchLabel: 'Open search and commands',
       backToTop: 'Back to top',
       newTab: '(opens in a new tab)',
-      noscript: 'This page works without JavaScript; the 3D effects, filters and contact form need it. Resume:',
+      noscript: 'This page works without JavaScript; the 3D effects, filters and search need it. Resume:',
       noscriptEmail: 'Email:',
       // Order = page order. `id` is the <section id>; `label` becomes "// 03 PROJECTS".
       sections: [
