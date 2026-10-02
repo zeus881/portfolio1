@@ -1,32 +1,23 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <!-- ===== Meta ===== -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sanjay Kumar | Backend Engineer &amp; UAV Systems</title>
-  <meta name="description" content="Sanjay Kumar, Backend Engineer in Greater Noida, India: Python services, REST/GraphQL APIs, event-driven systems and UAV ground control software." />
+  <title>Sanjay Kumar | Full Stack Developer &amp; UAV Systems</title>
+  <meta name="description" content="Sanjay Kumar, Full Stack Developer in Greater Noida, India: Python services, REST APIs, event-driven systems, real-time 3D web interfaces and UAV ground control software." />
   <meta name="author" content="Sanjay Kumar" />
   <meta name="theme-color" content="#050816" />
   <meta name="color-scheme" content="dark" />
-
-  <!-- ===== Open Graph / social preview ===== -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Sanjay Kumar | Backend Engineer &amp; UAV Systems" />
-  <meta property="og:description" content="Backend Engineer building Python services, REST/GraphQL APIs, event-driven systems and UAV ground control software." />
-  <meta property="og:locale" content="en_IN" />
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Sanjay Kumar | Backend Engineer &amp; UAV Systems" />
-  <meta name="twitter:description" content="Backend Engineer building Python services, REST/GraphQL APIs, event-driven systems and UAV ground control software." />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050816'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%2300D4FF'%3ESK%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050816'/%3E%3Cpath d='M10 20V10h10M44 10h10v10M54 44v10H44M20 54H10V44' fill='none' stroke='%2300D4FF' stroke-width='3'/%3E%3Ctext x='32' y='41' font-family='Arial,sans-serif' font-size='22' font-weight='700' text-anchor='middle' fill='%23E6EDF7'%3ESK%3C/text%3E%3C/svg%3E" />
 
   <!-- ===== Fonts and icons ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Orbitron:wght@600;700&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/devicon.min.css" />
 
-  <!-- ===== Tailwind (CDN) and theme config ===== -->
+  <!-- ===== Tailwind (CDN) with the design tokens ===== -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -34,15 +25,28 @@
         extend: {
           colors: {
             space: '#050816',
-            electric: '#00D4FF',
-            neon: '#8B5CF6',
-            aqua: '#06B6D4',
-            soft: '#F8FAFC',
+            ink: '#E6EDF7',
+            muted: '#8A96AD',
+            cyan: '#00D4FF',
+            purple: '#8B5CF6',
+            teal: '#06B6D4',
+            success: '#34D399',
+            danger: '#F87171',
+            surface: 'rgba(255,255,255,0.04)',
+            line: 'rgba(255,255,255,0.10)',
           },
           fontFamily: {
             display: ['Orbitron', 'sans-serif'],
             sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
           },
+          fontSize: {
+            12: ['12px', '16px'], 14: ['14px', '20px'], 16: ['16px', '26px'], 18: ['18px', '28px'],
+            24: ['24px', '32px'], 32: ['32px', '40px'], 48: ['48px', '56px'], 72: ['72px', '76px'],
+          },
+          borderRadius: { card: '16px', pill: '999px' },
+          maxWidth: { content: '1200px' },
+          transitionTimingFunction: { out: 'cubic-bezier(0.22, 1, 0.36, 1)' },
         },
       },
     };
@@ -52,65 +56,54 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="bg-space text-soft font-sans antialiased">
-  <!-- Skip link (label rendered from data.js) -->
+<body class="bg-space text-ink font-sans antialiased">
+  <!-- Boot screen: CSS hides it by 600 ms even if scripts fail -->
+  <div id="boot" class="boot" aria-hidden="true">
+    <div class="boot-mark"><span id="boot-initials"></span><span class="boot-line"></span></div>
+  </div>
+
+  <!-- Skip link (label from data.js) -->
   <a id="skip-link" class="skip-link" href="#main"></a>
 
   <!-- ===== Header / navigation ===== -->
-  <header id="site-header" class="site-header fixed inset-x-0 top-0 z-40">
-    <!-- Scroll progress bar (driven by main.js) -->
+  <header id="site-header" class="site-header">
     <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
-    <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8" aria-label="Primary">
-      <a id="nav-brand" href="#home" class="font-display text-xl font-bold tracking-widest text-electric"></a>
-
-      <!-- Desktop links -->
-      <ul id="nav-links" class="hidden items-center gap-1 lg:flex"></ul>
-
-      <div class="flex items-center gap-3">
-        <a id="nav-resume" class="btn btn-outline hidden sm:inline-flex" download></a>
-        <!-- Mobile menu toggle -->
-        <button id="nav-toggle" type="button" class="nav-toggle lg:hidden" aria-expanded="false" aria-controls="mobile-menu">
-          <span class="nav-toggle-bar"></span>
-          <span class="nav-toggle-bar"></span>
-          <span class="nav-toggle-bar"></span>
+    <nav class="nav-bar" aria-label="Primary">
+      <a id="nav-brand" href="#home" class="nav-brand"></a>
+      <ul id="nav-links" class="nav-links"></ul>
+      <div class="nav-actions">
+        <button id="palette-open" type="button" class="icon-btn kbd-btn"><kbd>/</kbd></button>
+        <button id="toggle-3d" type="button" class="pill-btn toggle-3d" aria-pressed="true"></button>
+        <a id="nav-resume" class="btn btn-outline nav-resume" download></a>
+        <button id="nav-toggle" type="button" class="icon-btn nav-toggle" aria-expanded="false" aria-controls="mobile-sheet">
+          <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
         </button>
       </div>
     </nav>
-
-    <!-- Mobile menu panel -->
-    <div id="mobile-menu" class="mobile-menu lg:hidden" hidden>
-      <ul id="mobile-links" class="flex flex-col gap-1 px-4 pb-4"></ul>
+    <!-- Mobile sheet -->
+    <div id="mobile-sheet" class="mobile-sheet" hidden>
+      <ul id="mobile-links" class="mobile-links"></ul>
     </div>
   </header>
 
-  <!-- ===== Main content: seven sections, filled by main.js ===== -->
+  <!-- ===== Main: seven sections, filled by main.js ===== -->
   <main id="main" tabindex="-1">
-    <section id="home" class="section section-hero" aria-label="Introduction"></section>
-    <section id="about" class="section" data-accent="electric" aria-labelledby="about-title"></section>
-    <section id="skills" class="section" data-accent="neon" aria-labelledby="skills-title"></section>
-    <section id="projects" class="section" data-accent="aqua" aria-labelledby="projects-title"></section>
-    <section id="experience" class="section" data-accent="neon" aria-labelledby="experience-title"></section>
-    <section id="education" class="section" data-accent="electric" aria-labelledby="education-title"></section>
-    <section id="contact" class="section" data-accent="neon" aria-labelledby="contact-title"></section>
+    <section id="home" class="section section-hero" data-accent="cyan" aria-label="Introduction"></section>
+    <section id="about" class="section" data-accent="cyan" aria-labelledby="about-title"></section>
+    <section id="skills" class="section" data-accent="purple" aria-labelledby="skills-title"></section>
+    <section id="projects" class="section" data-accent="cyan" aria-labelledby="projects-title"></section>
+    <section id="experience" class="section" data-accent="purple" aria-labelledby="experience-title"></section>
+    <section id="education" class="section" data-accent="purple" aria-labelledby="education-title"></section>
+    <section id="contact" class="section" data-accent="teal" aria-labelledby="contact-title"></section>
   </main>
 
-  <!-- ===== Project details modal (filled by main.js) ===== -->
-  <dialog id="project-modal" class="modal" aria-labelledby="modal-title">
-    <div class="modal-panel glass" id="modal-panel"></div>
-  </dialog>
-
   <!-- ===== Footer ===== -->
-  <footer class="border-t border-white/10 py-8 text-center text-sm text-slate-400">
-    <p id="footer-text" class="px-4"></p>
+  <footer class="site-footer">
+    <div id="footer-inner" class="container-x footer-inner"></div>
   </footer>
 
-  <!-- ===== Scripts ===== -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
-          integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <!-- ===== Scripts (classic, deferred; work from file:// too) ===== -->
   <script src="data.js" defer></script>
   <script src="main.js" defer></script>
-  <script src="bg-3d.js" defer></script>
-  <script src="hero-3d.js" defer></script>
 </body>
 </html>
