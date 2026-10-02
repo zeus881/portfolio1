@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sanjaykumarpotfolio.netlify.app/sitemap.xml

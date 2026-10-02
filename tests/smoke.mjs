@@ -120,6 +120,37 @@ if (data) {
   check('exactly one current role', data.experience.filter((x) => x.current).length === 1);
 }
 
+/* ===== Crawler-facing copies stay in sync with data.js ===== */
+const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const ldMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+let ld = null;
+try {
+  ld = ldMatch ? JSON.parse(ldMatch[1]) : null;
+} catch {
+  ld = null;
+}
+check('index.html has valid JSON-LD', !!ld);
+if (ld && data) {
+  const same =
+    ld['@type'] === 'Person' &&
+    ld.name === data.owner.name &&
+    ld.jobTitle === data.owner.roles[0] &&
+    ld.email === `mailto:${data.owner.email}` &&
+    ld.sameAs.includes(data.owner.github) &&
+    ld.sameAs.includes(data.owner.linkedin);
+  check('JSON-LD matches data.js (name, jobTitle, email, sameAs)', same);
+}
+const canonical = (html.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+const ogUrl = (html.match(/<meta property="og:url" content="([^"]+)"/) || [])[1];
+const robots = existsSync(join(ROOT, 'robots.txt')) ? readFileSync(join(ROOT, 'robots.txt'), 'utf8') : '';
+const sitemap = existsSync(join(ROOT, 'sitemap.xml')) ? readFileSync(join(ROOT, 'sitemap.xml'), 'utf8') : '';
+const siteUrls = [canonical, ogUrl, ld && ld.url, (sitemap.match(/<loc>([^<]+)<\/loc>/) || [])[1], (robots.match(/Sitemap:\s*(\S+)\/sitemap\.xml/) || [])[1] + '/'];
+check(
+  'site URL identical in canonical, og:url, JSON-LD, sitemap.xml and robots.txt',
+  !!canonical && canonical.startsWith('https://') && siteUrls.every((u) => u === canonical),
+  siteUrls.join(' | ')
+);
+
 /* ===== Phone-number scan across project files ===== */
 const PHONE_PATTERNS = [
   /\+\s?\d{1,3}[\s-]?\(?\d{2,5}\)?[\s-]?\d{3,5}[\s-]?\d{3,5}/, // international format with country code
