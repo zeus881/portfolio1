@@ -1,117 +1,167 @@
 # Sanjay Kumar — Interactive 3D Portfolio
 
-A single-page developer portfolio with a GPU particle background and a wireframe drone in the hero.
-Plain HTML, CSS and JavaScript: no framework, no bundler, no npm dependencies, no build step.
+A "mission control" portfolio for full stack and UAV/drone software roles.
+
+The page has:
+- a particle swarm in the background that changes formation for each section
+- a wireframe drone in the hero
+- architecture diagrams for the featured projects
+- a command palette (Ctrl+K)
+
+It is plain HTML, CSS and JavaScript: no framework, bundler or npm dependencies, and no build step.
 
 ## Run locally
 
-Requires Node.js (any current version) for the small static server.
-
 ```bash
-node local-server.js
+node local-server.js          # http://localhost:5173
+node tests/smoke.mjs          # content checks
 ```
 
-Open http://localhost:5173. Set the `PORT` environment variable to use a different port.
+Set the `PORT` environment variable to use a different port.
 
-Opening `index.html` straight from disk also works. Use the server anyway when testing the contact form and the resume download.
+You can also open `index.html` straight from disk (`file://`), and everything works except the contact form. From a file it cannot reach FormSubmit, so it opens a pre-filled email instead.
 
 ## Files
 
-| File | What it does |
+| File | Purpose |
 |---|---|
-| `index.html` | Page structure, meta and Open Graph tags, Tailwind config, script order |
-| `styles.css` | Colour tokens, glass cards, layout, animations, cursor, modal |
-| `data.js` | **All text content**: owner, counters, skills, projects, experience, education, UI labels |
-| `main.js` | Renders `data.js` into the page; navigation, reveals, counters, cursor, filters, modal, contact form |
-| `bg-3d.js` | Full-screen particle background (Three.js r128 + GLSL) |
-| `hero-3d.js` | Wireframe quadcopter in the hero |
+| `index.html` | Page shell, SEO and social meta, JSON-LD, Tailwind config with the design tokens, script order |
+| `styles.css` | Design system: tokens, glass cards, HUD brackets, sections, diagrams, modal, palette, motion |
+| `data.js` | **All content**: owner, counters, skills, projects (with diagrams), experience, education, palette actions, UI text |
+| `main.js` | Renders `data.js`; navigation, 3D toggle, motion, filters, project modal, deep links, contact form |
+| `bg-3d.js` | Morphing particle field (Three.js r128 + GLSL) |
+| `hero-3d.js` | Hero drone scene |
+| `diagrams.js` | SVG architecture diagrams drawn from `data.js` |
+| `palette.js` | Command palette |
 | `local-server.js` | Development server (Node built-ins only) |
-| `Sanjay_Kumar_Resume.pdf` | Resume behind the "Download Resume" buttons (add it to the root folder) |
+| `tests/smoke.mjs` | Content checks: counts, slugs, links, empty strings, diagrams, SEO sync, phone-number scan |
+| `.github/workflows/pages.yml` | Runs the checks, then deploys to GitHub Pages on every push to `main` |
+| `robots.txt`, `sitemap.xml` | Crawler files |
+| `Sanjay_Kumar_Resume.pdf` | Resume behind the download buttons. **Add this file before deploying.** |
 
 ## Deploy
 
-The site is static, so any static host works. Make sure `Sanjay_Kumar_Resume.pdf` is in the root folder before deploying.
+### GitHub Pages (automatic)
 
-### GitHub Pages
-
-1. Create a repository, for example `portfolio`, and push this folder:
-   ```bash
-   git remote add origin https://github.com/zeus881/portfolio.git
-   git push -u origin main
-   ```
-2. On GitHub, open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, branch `main`, folder `/ (root)`, then **Save**.
-3. After about a minute the site is live at `https://zeus881.github.io/portfolio/`.
-   All paths are relative, so it works from a sub-path.
+1. Push this folder to a GitHub repository, with `main` as the default branch.
+2. In the repository, open **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
+3. Every push to `main` runs `node --check` on each script and the smoke test, then publishes the site. A failing check stops the deploy.
+   The address is shown in the workflow run and under **Settings → Pages**.
 
 ### Netlify
 
-**Drag and drop:** sign in at https://app.netlify.com, open **Sites**, and drop this folder onto the deploy area.
+- **Drag and drop:** at https://app.netlify.com, open **Sites** and drop the folder onto the deploy area.
+- **From Git:** choose **Add new site → Import an existing project**. Leave the build command empty and set the publish directory to `.`.
 
-**From Git:** **Add new site → Import an existing project**, pick the repository, leave **Build command** empty and set **Publish directory** to `.`, then **Deploy**.
+### Site URL
 
-## Contact form
+The public address appears in five places, and the smoke test fails if they differ:
 
-The form posts JSON to `https://formsubmit.co/ajax/<owner.email>` (the address comes from `data.js`).
+- `index.html`: the canonical link, `og:url` and the JSON-LD `url`
+- `sitemap.xml`
+- `robots.txt`
 
-- **First submission:** FormSubmit emails the owner an activation link. Messages are not delivered until that link is clicked, and until then the page falls back to opening the visitor's email app.
-- **Any failure** (network error, timeout after 10 s, or FormSubmit answering `success: "false"`) opens a `mailto:` draft with the message filled in, and shows a link to open it again.
-- A hidden `_honey` field catches simple bots.
+It is currently set to `https://sanjaykumarpotfolio.netlify.app/`, the address printed on the resume. Change all five together if you deploy somewhere else.
+
+### Contact form
+
+The form posts to `https://formsubmit.co/ajax/sanjaykumarr99009@gmail.com`.
+
+- **Activation:** the first real submission makes FormSubmit email an activation link to that address. Messages are not delivered until it is clicked; until then the page falls back to a mailto draft.
+- **Fallback:** any failure (network error, a timeout after 10 s, or `success: "false"` from FormSubmit) opens a pre-filled email and tells the visitor.
+- **Bots:** submissions that fill the hidden `_honey` field are ignored.
 
 ## Customise
 
-### Content
+### Add or change a project
 
-Edit `data.js` only; `main.js` renders everything from it.
+Edit `projects` in `data.js`, then run `node tests/smoke.mjs`.
 
-- **Projects:** add an object to `projects`.
-  - `category` must be one of `projectFilters` (`Drones`, `Backend`, `AI`, `Web`). To add a category, add it to `projectFilters` too.
-  - `featured: true` makes the card span two columns on desktop (in the "All" view).
-  - `features` is the bullet list in the modal; leave it as `[]` for none.
-  - `link: null` hides the GitHub button.
-- **Skills:** each item takes an optional `icon`, which is a [Devicon](https://devicon.dev) class such as `devicon-docker-plain`. Leave it out when Devicon has no icon for that skill.
-- **Counters:** `value` counts up; `prefix` and `suffix` stay fixed (for example `<` and ` ms`).
-- **Section titles, nav labels, button and form text:** `ui`.
+```js
+{
+  slug: 'my-project',               // unique, kebab-case; deep link #project-my-project
+  title: 'My Project',
+  category: 'Web',                  // one of projectFilters (Drones, Backend, AI, Web)
+  featured: false,                  // true = spans two columns, needs a diagram
+  description: 'One or two sentences.',
+  features: ['Shown as a list in the modal'],  // [] for none
+  tags: ['JavaScript', 'Three.js'],
+  link: 'https://github.com/zeus881/my-project', // or null to hide the GitHub button
+  diagram: {                        // featured projects only
+    cols: 3, rows: 1,
+    nodes: [
+      { id: 'ui', label: 'Browser', kind: 'client', col: 0, row: 0 },
+      { id: 'api', label: 'API', sub: 'FastAPI', kind: 'service', col: 1, row: 0 },
+      { id: 'db', label: 'Database', kind: 'store', col: 2, row: 0 },
+    ],
+    groups: [],                     // { id, label, members: [node ids] } draws a frame
+    edges: [{ from: 'ui', to: 'api', both: true }, { from: 'api', to: 'db' }],
+  },
+},
+```
 
-The page `<title>`, meta description and Open Graph tags are in `index.html`, because crawlers read them before any script runs.
+Notes on diagrams:
+- `kind` sets the box style: `client`, `service`, `bus`, `store` or `external`.
+- Long labels wrap onto two lines automatically.
+- An edge can start or end at a group id.
+
+To add a filter category, add it to `projectFilters`. The filter buttons and their counts update automatically.
+
+Other content lives in the matching keys of `data.js`:
+- `skills` (each item takes an optional Devicon class)
+- `experience` (`current: true` shows the NOW marker)
+- `education`, `counters`, `whatIDo`
+- `ui` for every label and message
 
 ### Colours
 
-Colours are defined in three places, so keep them in sync:
+The tokens are defined in two places; keep them in sync:
 
-1. `styles.css` → `:root` tokens (`--bg`, `--electric`, `--neon`, `--aqua`, `--soft`, `--muted`)
+1. `styles.css` → `:root` (`--bg`, `--text`, `--muted`, `--cyan`, `--purple`, `--teal`, `--success`, `--danger`, …)
 2. `index.html` → `tailwind.config.theme.extend.colors`
-3. `bg-3d.js` → `CONFIG.colors` (particle palette and weights) and `hero-3d.js` → `CONFIG.colors`
 
-Each section's accent comes from its `data-accent` attribute in `index.html` (`electric`, `neon` or `aqua`).
-Neon purple `#8B5CF6` is below 4.5:1 contrast for small text on the glass cards, so purple text uses `#A78BFA` instead.
+The particle palette is `CONFIG.colors` in `bg-3d.js`, and the drone colours are `CONFIG.colors` in `hero-3d.js`.
 
-### Particle background (`bg-3d.js` → `CONFIG`)
+Each section's accent comes from its `data-accent` attribute in `index.html` (`cyan`, `purple` or `teal`).
+Purple text uses `#A78BFA`, because `#8B5CF6` is below 4.5:1 contrast on the glass cards.
 
-| Setting | Default | Meaning |
+### Formations (`bg-3d.js`)
+
+- `CONFIG.sectionFormation` maps section ids to formations: `nebula`, `sphere`, `grid`, `vflight`, `helix`, `ring`.
+- `CONFIG.fx` sets each formation's spin, ripple, pulse and idle drift.
+- Shapes are built in `buildFormations()`. Each formation is a function that returns `[x, y, z]` for particle `i`, so adding one means:
+  1. add a `make('name', seed, center, fill)` call
+  2. add an entry to `CONFIG.fx`
+  3. map a section to it
+- `CONFIG.morphSeconds` sets the transition time (1.4 s).
+
+### Particle counts and performance
+
+| Setting (`bg-3d.js` → `CONFIG`) | Default | Meaning |
 |---|---|---|
-| `counts.low` | 1200 | Mobile / touch / narrower than 768 px |
+| `counts.low` | 1200 | Touch devices or narrower than 768 px |
 | `counts.medium` | 2500 | Standard desktop |
 | `counts.high` | 4000 | High-end GPU (RTX, Radeon RX/Pro, Apple M-series, recent GTX, Intel Arc) |
-| `pointSize` | 7 | Base particle size |
-| `rotationSpeed` | 0.018 | Orbital rotation, radians per second |
-| `mouse.strength` | 3.2 | Positive pushes particles away from the cursor, negative pulls them in |
-| `mouse.radius` | 7 | Cursor influence radius (world units) |
-| `maxPixelRatio` | 2 | Cap on device pixel ratio |
+| `adaptive.minFps` / `adaptive.seconds` | 30 / 3 | Below 30 FPS for 3 s: particles halve once and mouse repulsion turns off |
+| `pointSize`, `mouse.radius`, `mouse.strength` | 6.5, 6, 2.6 | Look and cursor push |
+| `maxPixelRatio` | 2 | Pixel ratio cap |
 
-The chosen tier is written to `<html data-bg3d="quality:count">`, so you can check it in DevTools.
-Without WebGL, or if Three.js fails to load within 4 s, the CSS gradient background stays and the page works normally.
+The chosen tier shows in DevTools as `<html data-bg3d="tier:count">`, and the current formation as `data-bg-formation`.
 
-### Hero drone (`hero-3d.js` → `CONFIG`)
+## Behaviour
 
-`spinSpeed`, `rotorSpeed`, `maxTilt` and `armLength` control the slow rotation, rotor spin, mouse tilt and size.
-
-## Behaviour notes
-
-- **Reduced motion:** with `prefers-reduced-motion`, the background renders one static frame. The drone, typed line, reveals, counters, custom cursor and card tilt are all turned off, and final values are shown.
-- **Off-screen work:** the background pauses while the tab is hidden. The drone and the typed line also pause while the hero is off-screen.
-- **Custom cursor and card tilt:** only on devices with a fine pointer and hover (mouse or trackpad).
+- **3D toggle:** the "3D on/off" button in the nav (or "Toggle 3D" in the palette) stops both scenes and shows the gradient background. The choice is saved in `localStorage`.
+- **Reduced motion:** with `prefers-reduced-motion`, each scene draws one static frame. There is no morphing, typing, reveals, counter animation, cursor or card tilt.
+- **Performance:**
+  - The hero scene starts only when the hero is first visible and stops when it scrolls away.
+  - Both scenes pause in hidden tabs.
+  - Space for the hero canvas is reserved, so nothing shifts when it loads.
+- **Keyboard:**
+  - Ctrl+K / Cmd+K or `/` opens the palette.
+  - The project modal and the palette keep focus inside while open and return it when they close.
+- **Deep links:** `#project-<slug>` opens that project's modal; closing it restores the previous address.
 
 ## Known limitations
 
-- **Tailwind warning:** the Tailwind Play CDN prints one console warning, "cdn.tailwindcss.com should not be used in production". That is the price of the no-build setup. To remove it, generate a static stylesheet with the [Tailwind standalone CLI](https://tailwindcss.com/blog/standalone-cli) and replace the CDN script with a `<link>`.
-- **JavaScript required:** the content is rendered by JavaScript from `data.js`, so it does not appear without JavaScript.
+- **Tailwind warning:** the Tailwind Play CDN logs one console warning, "should not be used in production". It is the cost of having no build step. To remove it, generate a stylesheet with the Tailwind standalone CLI and replace the CDN script with a `<link>`.
+- **JavaScript required:** the content is rendered from `data.js`, so it does not appear without JavaScript. The crawler-facing title, description, Open Graph tags and JSON-LD are static in `index.html`.
