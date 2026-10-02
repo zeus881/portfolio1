@@ -7,7 +7,8 @@
  *  2. Boot screen, navigation and header
  *  3. Section rendering (headers, home, about, skills, projects, experience, education, contact, footer)
  *  4. Motion and interactions (3D toggle, local time, typed line, reveals, counters, scroll UI, cursor, card tilt)
- *  5. Boot
+ *  5. Projects: filters, modal, deep links
+ *  6. Boot
  */
 'use strict';
 
@@ -48,6 +49,7 @@
     cap: '<path d="M2 9 12 4l10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
     award: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
     download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
     web: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M10 9l-2 2 2 2M14 9l2 2-2 2"/>',
     api: '<path d="M8 6l-5 6 5 6M16 6l5 6-5 6M13.5 4l-3 16"/>',
     drone:
@@ -270,7 +272,11 @@
   /* ----- Projects: filters + cards ----- */
   function projectCard(p) {
     const P = ui.projects;
-    return el('div', { class: `project-item reveal${p.featured ? ' is-featured' : ''}`, 'data-category': p.category, 'data-slug': p.slug }, [
+    const preview =
+      p.diagram && window.Diagrams
+        ? el('div', { class: 'diagram-preview', 'aria-hidden': 'true' }, window.Diagrams.render(p.diagram, { compact: true }))
+        : null;
+    return el('div', { id: `project-${p.slug}`, class: `project-item reveal${p.featured ? ' is-featured' : ''}`, 'data-category': p.category, 'data-slug': p.slug }, [
       el('article', { class: `project-card glass${p.featured ? ' hud' : ''}` }, [
         el('span', { class: 'card-light', 'aria-hidden': 'true' }),
         el('div', { class: 'card-badges' }, [
@@ -281,7 +287,7 @@
           el('button', { type: 'button', class: 'card-open', 'data-project': p.slug, 'aria-haspopup': 'dialog', text: p.title })
         ),
         el('p', { class: 'card-text', text: p.description }),
-        p.diagram ? el('div', { class: 'diagram-preview', 'data-diagram': p.slug, 'aria-hidden': 'true' }) : null,
+        preview,
         tagList(p.tags),
         el('span', { class: 'card-more', 'aria-hidden': 'true', text: `${P.details} →` }),
       ]),
@@ -711,7 +717,155 @@
   }
 
   /* =====================================================================
-   * 5. Boot
+   * 5. Projects: filters, modal, deep links
+   * ===================================================================== */
+
+  /* ----- Filters with a FLIP layout transition (transform and opacity only) ----- */
+  function initProjectFilters() {
+    const grid = $('#project-grid');
+    const items = $$('.project-item', grid);
+    const buttons = $$('.filter-btn');
+    const status = $('#project-status');
+    const ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+    const apply = (filter) => {
+      const before = new Map(items.filter((i) => !i.hidden).map((i) => [i, i.getBoundingClientRect()]));
+      grid.dataset.filter = filter;
+      let shown = 0;
+      for (const item of items) {
+        const match = filter === 'All' || item.dataset.category === filter;
+        item.hidden = !match;
+        if (match) {
+          shown++;
+          item.classList.add('is-visible'); // filtered-in cards skip the scroll reveal
+        }
+      }
+      for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.filter === filter));
+      status.textContent = fmt(ui.projects.status, { n: shown, total: items.length });
+
+      if (!motionAllowed()) return;
+      for (const item of items) {
+        if (item.hidden) continue;
+        const after = item.getBoundingClientRect();
+        const first = before.get(item);
+        if (first) {
+          const dx = first.left - after.left;
+          const dy = first.top - after.top;
+          if (dx || dy) item.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 500, easing: ease });
+        } else {
+          item.animate([{ opacity: 0, transform: 'scale(0.96)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: ease });
+        }
+      }
+    };
+
+    for (const b of buttons) b.addEventListener('click', () => apply(b.dataset.filter));
+  }
+
+  /* ----- Project modal: native <dialog>; Esc, close button, outside click; focus trap; #project-<slug> ----- */
+  const projectModal = { open: () => {} };
+
+  function initProjectModal() {
+    const dialog = $('#project-modal');
+    const panel = $('#modal-panel');
+    const P = ui.projects;
+    const HASH_PREFIX = '#project-';
+    let trigger = null;
+    let previousHash = '';
+
+    const fill = (p) => {
+      const closeBtn = el('button', { type: 'button', class: 'icon-btn modal-close', 'aria-label': P.close }, icon('close', 20));
+      closeBtn.addEventListener('click', () => dialog.close());
+      const diagram =
+        p.diagram && window.Diagrams
+          ? el('div', { class: 'modal-section' }, [
+              el('h3', { class: 'mono-label', text: P.architecture }),
+              el('div', { class: 'diagram-full' }, window.Diagrams.render(p.diagram, { title: fmt(P.diagramLabel, { title: p.title }) })),
+            ])
+          : null;
+      panel.replaceChildren(
+        closeBtn,
+        el('div', { class: 'card-badges' }, [
+          el('span', { class: 'badge', text: p.category }),
+          p.featured ? el('span', { class: 'badge badge-featured', text: P.featured }) : null,
+        ]),
+        el('h2', { id: 'modal-title', class: 'modal-title', text: p.title }),
+        el('p', { class: 'modal-text', text: p.description }),
+        p.features.length
+          ? el('div', { class: 'modal-section' }, [
+              el('h3', { class: 'mono-label', text: P.features }),
+              el('ul', { class: 'modal-features' }, p.features.map((f) => el('li', { text: f }))),
+            ])
+          : null,
+        diagram,
+        el('div', { class: 'modal-section' }, [el('h3', { class: 'mono-label', text: P.stack }), tagList(p.tags)]),
+        p.link
+          ? el('div', { class: 'modal-actions' },
+              externalLink({ class: 'btn btn-primary', href: p.link }, [devicon('devicon-github-original'), P.github])
+            )
+          : null
+      );
+      return closeBtn;
+    };
+
+    const open = (slug, from) => {
+      const project = DATA.projects.find((p) => p.slug === slug);
+      if (!project) return;
+      if (dialog.open) dialog.close();
+      trigger = from || $(`.card-open[data-project="${slug}"]`);
+      if (!location.hash.startsWith(HASH_PREFIX)) previousHash = location.hash;
+      history.replaceState(null, '', `${HASH_PREFIX}${slug}`);
+      const closeBtn = fill(project);
+      dialog.showModal();
+      root.classList.add('modal-open');
+      closeBtn.focus();
+    };
+    projectModal.open = open;
+
+    dialog.addEventListener('close', () => {
+      root.classList.remove('modal-open');
+      history.replaceState(null, '', previousHash || location.pathname + location.search);
+      if (trigger) trigger.focus();
+      trigger = null;
+    });
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close(); // click on the backdrop area
+    });
+    dialog.addEventListener('keydown', (e) => trapFocus(e, panel));
+
+    // Any click on a card opens it; the title button is the keyboard control
+    $('#project-grid').addEventListener('click', (e) => {
+      const card = e.target.closest('.project-card');
+      if (!card) return;
+      const button = $('.card-open', card);
+      open(button.dataset.project, button);
+    });
+
+    // Deep links: on load and whenever the hash changes
+    const fromHash = () => {
+      if (location.hash.startsWith(HASH_PREFIX)) open(decodeURIComponent(location.hash.slice(HASH_PREFIX.length)));
+    };
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+  }
+
+  /** Keep Tab and Shift+Tab inside `container`. */
+  function trapFocus(e, container) {
+    if (e.key !== 'Tab') return;
+    const focusables = $$('a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]', container).filter((n) => n.offsetParent);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  /* =====================================================================
+   * 6. Boot
    * ===================================================================== */
   initBootScreen();
   renderNav();
@@ -735,4 +889,6 @@
   initScrollUI();
   initCursor();
   initCardTilt();
+  initProjectFilters();
+  initProjectModal();
 })();

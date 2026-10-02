@@ -554,10 +554,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .card-open::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius-card); }
 .card-open:focus-visible { outline: none; }
 .card-open:focus-visible::after { outline: 2px solid var(--cyan); outline-offset: 3px; }
-/* Space for the mini architecture diagram (drawn by diagrams.js) */
+/* Mini architecture diagram (drawn by diagrams.js; height follows the SVG viewBox) */
 .diagram-preview {
   margin-top: 16px;
-  aspect-ratio: 16 / 5;
+  padding: 8px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background-color: rgba(5, 8, 22, 0.5);
@@ -796,6 +796,89 @@ textarea.field-input { resize: vertical; min-height: 140px; }
 }
 .cursor-ring.is-hover { --ring-scale: 1.6; border-color: rgba(139, 92, 246, 0.8); }
 .cursor-ring.is-down { --ring-scale: 0.75; }
+
+/* ===== Architecture diagrams (diagrams.js) ===== */
+.diagram { display: block; width: 100%; height: auto; }
+.dg-group { fill: rgba(139, 92, 246, 0.05); stroke: rgba(139, 92, 246, 0.45); stroke-width: 1; stroke-dasharray: 5 5; }
+.dg-group-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; fill: var(--purple-text); }
+.dg-edge { stroke: rgba(0, 212, 255, 0.4); stroke-width: 1.5; }
+.dg-arrowhead { fill: rgba(0, 212, 255, 0.75); }
+.dg-flow { stroke: var(--cyan); stroke-width: 1.5; stroke-dasharray: 3 11; stroke-linecap: round; opacity: 0.9; }
+.motion .dg-flow { animation: dg-flow 1.2s linear infinite; }
+@keyframes dg-flow { to { stroke-dashoffset: -14; } }
+.dg-node rect { fill: rgba(10, 14, 32, 0.95); stroke: rgba(0, 212, 255, 0.55); stroke-width: 1.2; }
+.dg-node--bus rect { stroke: var(--teal); fill: rgba(6, 182, 212, 0.12); }
+.dg-node--store rect { stroke: var(--purple); fill: rgba(139, 92, 246, 0.12); }
+.dg-node--external rect { stroke: rgba(230, 237, 247, 0.4); stroke-dasharray: 4 4; }
+.dg-node--client rect { stroke: var(--cyan); fill: rgba(0, 212, 255, 0.1); }
+.dg-label { font-family: var(--font-body); font-size: 15px; font-weight: 600; fill: var(--text); text-anchor: middle; }
+.dg-sub { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); text-anchor: middle; }
+.diagram--compact .dg-label { font-size: 15px; }
+.diagram-full {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(5, 8, 22, 0.6);
+  overflow-x: auto;
+}
+.diagram-full .diagram { min-width: 760px; } /* scrolls sideways on phones instead of shrinking the text */
+
+/* ===== Project modal (native <dialog>) ===== */
+.modal {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  overflow-y: auto;
+}
+.modal[open] { display: grid; place-items: center; }
+.modal::backdrop { background: rgba(2, 4, 12, 0.78); backdrop-filter: blur(6px); }
+.modal-panel {
+  width: 100%;
+  max-width: 1040px;
+  padding: 32px 20px 24px;
+  background: rgba(10, 14, 32, 0.95);
+  box-shadow: 0 0 60px rgba(0, 212, 255, 0.12);
+}
+@media (min-width: 640px) { .modal-panel { padding: 40px; } }
+.modal-close { position: absolute; top: 16px; right: 16px; }
+.modal-title { margin-top: 12px; padding-right: 48px; font-size: var(--fs-24); line-height: 1.25; }
+@media (min-width: 768px) { .modal-title { font-size: var(--fs-32); } }
+.modal-text { margin-top: 12px; color: var(--muted); line-height: 1.7; }
+.modal-section { margin-top: 24px; }
+.modal-features { margin-top: 12px; display: grid; gap: 8px; color: var(--muted); }
+.modal-features li { position: relative; padding-left: 18px; line-height: 1.6; }
+.modal-features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--cyan);
+  transform: rotate(45deg);
+}
+.modal-actions { margin-top: 28px; }
+.motion .modal[open] .modal-panel { animation: modal-in var(--t-reveal) var(--ease); }
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+html.modal-open { overflow: hidden; }
+/* The custom cursor sits below the dialog's top layer: use the native one while it is open */
+.modal-open .cursor-dot,
+.modal-open .cursor-ring { display: none; }
+.has-cursor .modal,
+.has-cursor .modal * { cursor: auto !important; }
+.has-cursor .modal a,
+.has-cursor .modal button { cursor: pointer !important; }
 
 /* ===== Footer ===== */
 .site-footer { border-top: 1px solid var(--border); padding-block: 32px; }
