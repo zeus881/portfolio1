@@ -7,8 +7,9 @@
  *  1. Setup and helpers
  *  2. Navigation: header height, mobile sheet, anchor offsets, scroll UI
  *  3. Hero and sections: boot screen, typed roles, India time, reveals, counters, footer year
- *  4. Pointer effects: custom cursor, project card tilt
- *  5. Boot
+ *  4. 3D: gating (WebGL, saveData, deviceMemory, 2G), lazy loading after first paint, on/off toggle
+ *  5. Pointer effects: custom cursor, project card tilt
+ *  6. Boot
  */
 (function () {
   'use strict';
@@ -323,7 +324,132 @@
   }
 
   /* =====================================================================
-   * 4. Pointer effects (fine pointers only)
+   * 4. 3D: gating, lazy loading after first paint, on/off toggle
+   * ===================================================================== */
+  var FX_KEY = 'sk-portfolio-3d';
+  var fx = { webgl: false, enabled: false, loading: null };
+
+  function readStored(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (err) {
+      return null; // storage blocked (private mode, old browsers)
+    }
+  }
+  function writeStored(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (err) {
+      /* the choice then lasts for this visit only */
+    }
+  }
+
+  function webglAvailable() {
+    try {
+      var canvas = document.createElement('canvas');
+      var gl = window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+      if (gl && gl.getExtension('WEBGL_lose_context')) gl.getExtension('WEBGL_lose_context').loseContext();
+      return !!gl;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /** Data saver off, at least 3 GB memory, not 2G. Missing APIs count as allowed. */
+  function deviceAllows3D() {
+    var c = navigator.connection;
+    if (c && c.saveData) return false;
+    if (c && /(^|-)2g$/.test(c.effectiveType || '')) return false;
+    if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory < 3) return false;
+    return true;
+  }
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function () {
+        reject(new Error(src));
+      };
+      document.body.appendChild(s);
+    });
+  }
+
+  /** Three.js first, then the two scenes; never throws to the page. */
+  function load3D() {
+    if (!fx.loading) {
+      fx.loading = loadScript('./vendor/three.min.js')
+        .then(function () {
+          return loadScript('./bg-3d.js');
+        })
+        .then(function () {
+          return loadScript('./hero-3d.js');
+        })
+        .catch(function () {
+          root.setAttribute('data-bg3d', 'unavailable:0'); // the CSS gradient stays
+        });
+    }
+    return fx.loading;
+  }
+
+  /** After the first paint and once the page is idle. */
+  function afterFirstPaint(fn) {
+    var run = function () {
+      window.requestAnimationFrame(function () {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(fn, { timeout: 2000 });
+        else setTimeout(fn, 200);
+      });
+    };
+    if (document.readyState === 'complete') run();
+    else window.addEventListener('load', run);
+  }
+
+  function renderFxButton() {
+    var button = $('#toggle-3d');
+    button.setAttribute('aria-pressed', String(fx.enabled));
+    button.textContent = fx.enabled ? ui.toggle3dOn : ui.toggle3dOff;
+    if (!fx.webgl) {
+      button.setAttribute('aria-disabled', 'true');
+      button.setAttribute('title', ui.toggle3dUnavailable);
+    }
+  }
+
+  function setFx(enabled) {
+    if (!fx.webgl) return;
+    fx.enabled = enabled;
+    root.setAttribute('data-fx', enabled ? 'on' : 'off');
+    writeStored(FX_KEY, enabled ? 'on' : 'off');
+    renderFxButton();
+    var notify = function () {
+      var event;
+      try {
+        event = new CustomEvent('fx3d:change', { detail: { enabled: enabled } });
+      } catch (err) {
+        event = document.createEvent('CustomEvent');
+        event.initCustomEvent('fx3d:change', false, false, { enabled: enabled });
+      }
+      window.dispatchEvent(event);
+    };
+    if (enabled) load3D().then(notify);
+    else notify();
+  }
+  function toggleFx() {
+    setFx(!fx.enabled);
+  }
+
+  function init3D() {
+    fx.webgl = webglAvailable();
+    var stored = readStored(FX_KEY);
+    fx.enabled = fx.webgl && (stored ? stored === 'on' : deviceAllows3D());
+    root.setAttribute('data-fx', fx.enabled ? 'on' : 'off');
+    renderFxButton();
+    $('#toggle-3d').addEventListener('click', toggleFx);
+    if (fx.enabled) afterFirstPaint(load3D);
+  }
+
+  /* =====================================================================
+   * 5. Pointer effects (fine pointers only)
    * ===================================================================== */
 
   /** Custom cursor: dot plus trailing ring. */
@@ -408,7 +534,7 @@
   }
 
   /* =====================================================================
-   * 5. Boot
+   * 6. Boot
    * ===================================================================== */
   if (!hasIO) root.classList.remove('motion');
   initBootScreen();
@@ -423,4 +549,5 @@
   initFooterYear();
   initCursor();
   initCardTilt();
+  init3D();
 })();

@@ -11,7 +11,8 @@
  *  3. Formations        one position buffer per formation (seeded, shuffled)
  *  4. Quality           device tier → particle count
  *  5. Field             renderer, morph scheduling, loop, adaptive quality, toggle, resize, teardown
- *  6. Boot              waits for Three.js (100 ms × 40); otherwise the CSS gradient stays
+ *  6. Boot              main.js loads this file after first paint, only when 3D is allowed;
+ *                       if WebGL fails the CSS gradient stays
  *
  * Debug: <html data-bg3d="tier:count" data-bg-formation="name">
  * Shared toggle: main.js sets <html data-fx="on|off"> and fires `fx3d:change` { enabled }.
@@ -23,8 +24,9 @@
    * 1. Config
    * ===================================================================== */
   const CONFIG = {
-    counts: { low: 1200, medium: 2500, high: 4000 },
+    counts: { ultra: 600, low: 1200, medium: 2500, high: 4000 },
     maxPixelRatio: 2,
+    maxPixelRatioPhone: 1.5,
     colors: [
       { hex: '#00D4FF', weight: 0.34 },
       { hex: '#8B5CF6', weight: 0.3 },
@@ -57,7 +59,6 @@
     },
     adaptive: { minFps: 30, seconds: 3 },
     staticTime: 8,
-    retry: { interval: 100, attempts: 40 },
   };
 
   /* =====================================================================
@@ -345,7 +346,7 @@
     try {
       const canvas = document.createElement('canvas');
       return canvas.getContext('webgl2') || canvas.getContext('webgl');
-    } catch {
+    } catch (err) {
       return null;
     }
   }
@@ -359,19 +360,33 @@
     return String(gl.getParameter(gl.RENDERER) || '');
   }
 
-  function detectQuality() {
-    const gl = probeGL();
-    if (!gl) return { tier: 'none', count: 0 };
-    const mobile =
+  /** Phones: coarse pointer, mobile user agent or a narrow screen. */
+  function isPhone() {
+    return (
       window.matchMedia('(pointer: coarse)').matches ||
       /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
-      window.innerWidth < 768;
+      window.innerWidth < 768
+    );
+  }
+
+  /** Small or weak phones: short screen side under 375 px, 4 or fewer cores, or under 4 GB memory. */
+  function isWeakPhone() {
+    const shortSide = Math.min(window.screen.width || window.innerWidth, window.screen.height || window.innerHeight);
+    const cores = navigator.hardwareConcurrency || 8;
+    const memory = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 8;
+    return shortSide < 375 || cores <= 4 || memory < 4;
+  }
+
+  function detectQuality() {
+    const gl = probeGL();
+    if (!gl) return { tier: 'none', count: 0, phone: false };
+    const phone = isPhone();
     let tier = 'medium';
-    if (mobile) tier = 'low';
+    if (phone) tier = isWeakPhone() ? 'ultra' : 'low';
     else if (/RTX|Radeon RX|Radeon Pro|Apple M\d|Apple GPU|GTX 1[06-9]\d0|GTX 16\d0|Arc A\d/i.test(gpuName(gl))) tier = 'high';
     const lose = gl.getExtension('WEBGL_lose_context');
     if (lose) lose.loseContext();
-    return { tier, count: CONFIG.counts[tier] };
+    return { tier: tier, count: CONFIG.counts[tier], phone: phone };
   }
 
   /* =====================================================================
@@ -379,18 +394,20 @@
    * ===================================================================== */
   function createField(THREE) {
     const root = document.documentElement;
-    const { tier, count } = detectQuality();
+    const quality = detectQuality();
+    const tier = quality.tier;
+    const count = quality.count;
     root.dataset.bg3d = `${tier}:${count}`;
     if (!count) return null;
 
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
-    } catch {
+      renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: quality.phone ? 'default' : 'high-performance' });
+    } catch (err) {
       root.dataset.bg3d = 'none:0';
       return null;
     }
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, CONFIG.maxPixelRatio);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, quality.phone ? CONFIG.maxPixelRatioPhone : CONFIG.maxPixelRatio);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
@@ -680,6 +697,7 @@
       window.removeEventListener('touchend', clearPointer);
       root.removeEventListener('mouseleave', clearPointer);
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
       window.removeEventListener('fx3d:change', onToggle);
       document.removeEventListener('visibilitychange', onVisibility);
       reduceMotion.removeEventListener('change', refresh);
@@ -696,6 +714,7 @@
     window.addEventListener('touchend', clearPointer, { passive: true });
     root.addEventListener('mouseleave', clearPointer);
     window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
     window.addEventListener('fx3d:change', onToggle);
     document.addEventListener('visibilitychange', onVisibility);
     reduceMotion.addEventListener('change', refresh);
@@ -709,18 +728,8 @@
   }
 
   /* =====================================================================
-   * 6. Boot: wait for Three.js
+   * 6. Boot: main.js loads vendor/three.min.js first, then this file
    * ===================================================================== */
-  let attempts = 0;
-  (function waitForThree() {
-    if (window.THREE) {
-      window.Background3D = createField(window.THREE);
-      return;
-    }
-    if (++attempts >= CONFIG.retry.attempts) {
-      document.documentElement.dataset.bg3d = 'unavailable:0';
-      return;
-    }
-    setTimeout(waitForThree, CONFIG.retry.interval);
-  })();
+  if (window.THREE) window.Background3D = createField(window.THREE);
+  else document.documentElement.dataset.bg3d = 'unavailable:0';
 })();
